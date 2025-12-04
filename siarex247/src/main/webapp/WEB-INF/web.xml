@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" id="WebApp_ID" version="3.1">
+  <display-name>siarex247</display-name>
+  
+  <filter>
+        <filter-name>struts2</filter-name>
+        <filter-class>org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>struts2</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    
+    <servlet id="Servlet_1232581596350">
+         <servlet-name>ConnectionTester</servlet-name>
+         <servlet-class>zntservlet.ConnectionTester</servlet-class>
+         <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet id="Servlet_1232581596351">
+         <servlet-name>ConnectionTesterMonitor</servlet-name>
+         <servlet-class>zntservlet.ConnectionTesterMonitor</servlet-class>
+         <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet id="Servlet_1232581596352">
+         <servlet-name>ConnectionTesterSqlMonitor</servlet-name>
+         <servlet-class>zntservlet.ConnectionTesterSqlMonitor</servlet-class>
+         <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    
+    <servlet-mapping>
+        <servlet-name>ConnectionTester</servlet-name>
+        <url-pattern>/servlet/zntservlet.ConnectionTester</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ConnectionTesterMonitor</servlet-name>
+        <url-pattern>/servlet/zntservlet.ConnectionTesterMonitor</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ConnectionTesterSqlMonitor</servlet-name>
+        <url-pattern>/servlet/zntservlet.ConnectionTesterSqlMonitor</url-pattern>
+    </servlet-mapping>
+
+    
+    <servlet id="Servlet_1232581596349">
+         <servlet-name>Log4JInit</servlet-name>
+		 <servlet-class>com.siarex247.servlet.Log4JInit</servlet-class>
+         <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    
+    <security-constraint>
+        <web-resource-collection>
+        <web-resource-name>SERVAUTO PROFESOR</web-resource-name>
+        <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+        <role-name>role1</role-name>
+        </auth-constraint>
+    </security-constraint>    
+    
+     <login-config>
+       <auth-method>FORM</auth-method>
+       <form-login-config>
+          <form-login-page>/login.jsp</form-login-page>	
+          <form-error-page>/errorRedirec.jsp</form-error-page>
+       </form-login-config>
+    </login-config>
+  
+  <welcome-file-list>
+    <welcome-file>default.jsp</welcome-file>
+    <welcome-file>default.htm</welcome-file>
+  </welcome-file-list>
+</web-app>
