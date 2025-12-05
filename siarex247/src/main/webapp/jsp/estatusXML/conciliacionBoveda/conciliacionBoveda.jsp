@@ -42,14 +42,14 @@ int anioActual = Integer.parseInt(fechaHoy.substring(0, 4));
 	<div class="card-header">
 		<div class="row flex-between-end">
 			<div class="col-auto align-self-center">
-				<h5 class="mb-0" data-anchor="data-anchor" id="CONCILIACION_BOVEDA_TITLE1">Conciliación XML de la Boveda</h5>
+				<h5 class="mb-0" data-anchor="data-anchor" id="CONCILIACION_BOVEDA_TITLE1">ConciliaciÃ³n XML de la Boveda</h5>
 			</div>
 		</div>
 	</div>
 	
 	<div class="card-header">
 		<div class="mb-2 row">
-			<label class="col-sm-1 col-form-label" for="anio" id="CONCILIACION_BOVEDA_ETQ1">Año</label>
+			<label class="col-sm-1 col-form-label" for="anio" id="CONCILIACION_BOVEDA_ETQ1">AÃ±o</label>
 			<div class="col-sm-1">
 				<div class="form-group">
 				<select class="form-select" id="anio" name="anio" onchange="">
@@ -96,7 +96,7 @@ int anioActual = Integer.parseInt(fechaHoy.substring(0, 4));
 						<thead class="bg-200 text-900">
 							<tr>
 								<th class="sort pe-1 align-middle white-space-nowrap" id="CONCILIACION_BOVEDA_ETQ4">RFC</th>
-								<th class="sort pe-1 align-middle white-space-nowrap" id="CONCILIACION_BOVEDA_ETQ5">Razón Social</th>
+								<th class="sort pe-1 align-middle white-space-nowrap" id="CONCILIACION_BOVEDA_ETQ5">RazÃ³n Social</th>
 								<th class="sort pe-1 align-middle white-space-nowrap" id="CONCILIACION_BOVEDA_ETQ6">Tipo Moneda</th>
 								<th class="sort pe-1 align-middle white-space-nowrap" id="CONCILIACION_BOVEDA_ETQ7">Serie/Folio</th>
 								<th class="sort pe-1 align-middle white-space-nowrap" id="CONCILIACION_BOVEDA_ETQ8">UUID Factura</th>
@@ -113,7 +113,7 @@ int anioActual = Integer.parseInt(fechaHoy.substring(0, 4));
 								<th class="sort pe-1 align-middle white-space-nowrap" id="CONCILIACION_BOVEDA_ETQ19">Estatus Complemento</th>
 								<th class="sort pe-1 align-middle white-space-nowrap" id="CONCILIACION_BOVEDA_ETQ20">XML COMP.</th>
 								<th class="sort pe-1 align-middle white-space-nowrap" id="CONCILIACION_BOVEDA_ETQ21">PDF COMP.</th>
-								<th class="sort pe-1 align-middle white-space-nowrap" id="CONCILIACION_BOVEDA_ETQ22">Estatus Conciliación</th>
+								<th class="sort pe-1 align-middle white-space-nowrap" id="CONCILIACION_BOVEDA_ETQ22">Estatus ConciliaciÃ³n</th>
 							</tr>
 							<tr class="forFilters">
 								<th></th>
@@ -151,6 +151,28 @@ int anioActual = Integer.parseInt(fechaHoy.substring(0, 4));
    <input type="hidden" name="f" value="" id="idRegistro">
    <input type="hidden" name="t" value="" id="tipoArchivo">
 </form>
+
+<!-- OVERLAY â€“ IGUAL QUE BÃ“VEDA RECIBIDOS -->
+<div id="overSeccion_Conciliacion_Boveda"
+     style="display:none;
+            position:fixed;
+            width:100%;
+            height:100%;
+            background:rgba(255,255,255,0.7);
+            z-index:9999;
+            top:0;
+            left:0;
+            text-align:center;
+            padding-top:250px;">
+    
+    <!-- GIF EXACTO â€“ mismo que usas (loader circular) -->
+    <img src="/siarex247/img/loading.gif" width="120" />
+
+    <br>
+    <h4 style="color:#555; font-weight:600;">Procesando...</h4>
+</div>
+
+
 
 
 

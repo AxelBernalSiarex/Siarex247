@@ -88,6 +88,17 @@ var tablaDetalle = null;
 				ajax : {
 					url: '/siarex247/cumplimientoFiscal/conciliacion/boveda/detalleConsiliados.action',
 					type: 'POST',
+					beforeSend: function() {
+					       // Mostrar GIF
+					       $('#overSeccion_Conciliacion_Boveda').show();
+					       $('#btnBuscar').prop('disabled', true);
+					   },
+
+					   complete: function() {
+					       // Ocultar GIF
+					       $('#overSeccion_Conciliacion_Boveda').hide();
+					       $('#btnBuscar').prop('disabled', false);
+					   },
 					data : {
 						anio : function() { return obtenerAnio(); },
 						mesCombo : function() { return obtenerMes(); },
@@ -340,6 +351,7 @@ var tablaDetalle = null;
 		
 		function buscarConsiliacion(){
 			try {
+				$('#overSeccion_Conciliacion_Boveda').show();
 				$('#tablaDetalle').DataTable().ajax.reload(null,false);
 			}
 			catch(e) {
