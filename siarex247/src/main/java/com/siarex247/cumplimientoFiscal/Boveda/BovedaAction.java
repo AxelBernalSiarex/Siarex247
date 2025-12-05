@@ -1418,6 +1418,7 @@ public class BovedaAction extends BovedaSupport {
 		Connection con = null;
 		String documentoXML = "";
 		try {
+			logger.info("ENTRO A XML");
 			SiarexSession session = ObtenerSession.getSession(request);
 			if ("".equals(session.getEsquemaEmpresa())) {
 				return Action.LOGIN;

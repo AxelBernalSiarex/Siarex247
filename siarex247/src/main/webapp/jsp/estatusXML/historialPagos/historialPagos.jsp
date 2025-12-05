@@ -92,6 +92,22 @@
 <div class="modal fade" id="myModalHistorialPagos" tabindex="-1" role="dialog" aria-labelledby="modalLabelHistorial" aria-hidden="true"></div>
 <div class="modal fade" id="modalErrorPro" data-bs-keyboard="false" data-bs-backdrop="static" aria-labelledby="staticBackdropLabel"  tabindex="-1" role="dialog" aria-hidden="true"></div>
 
+
+<!-- Formulario para abrir XML de Bóveda desde Historial de Pagos -->
+<form action="/siarex247/jsp/estatusXML/historialPagos/mostrarXMLHistorial.jsp"
+      name="frmHistorialXML"
+      id="frmHistorialXML"
+      target="_blank"
+      method="post">
+   <!-- f = UUID que usará mostrarXMLHistorial.jsp -->
+   <input type="hidden" name="f" value="" id="uuidHistorialP">
+</form>
+
+
+
+
+
+
 <script type="text/javascript">
 	$(document).ready(function() {
 		// 1. Cargar el modal en el contenedor vacÃ­o

@@ -65,16 +65,42 @@ $(document).ready(function() {
                 dataType: 'json',
                 dataSrc: 'data'
             },
-            columns : [
-                { data: "rfc" },
-                { data: "fechaPago",       className: "alinearCentro" },
-                { data: "tipoMoneda",      className: "alinearCentro" },
-                { data: "total",           className: "alinearDerecha",
-                  render: $.fn.dataTable.render.number(',', '.', 2) },
-				{ data: "uuidFactura" },
-				{ data: "uuidComplemento"},
-                { data: "estatus" }
-            ],
+			columns : [
+			    { data: "rfc" },
+			    { data: "fechaPago",       className: "alinearCentro" },
+			    { data: "tipoMoneda",      className: "alinearCentro" },
+			    { data: "total",           className: "alinearDerecha",
+			      render: $.fn.dataTable.render.number(',', '.', 2) },
+
+			    // UUID FACTURA → solo XML en Bóveda
+			    { 
+			        data: "uuidFactura",
+			        render: function(data, type, row) {
+			            if (!data) return "";
+
+			            return '<a href="javascript:verXMLBoveda(\'' + data + '\');" ' +
+			                   'title="Ver XML factura en Bóveda">' +
+			                   '<i class="fa fa-file-code-o"></i> ' + data + '</a>';
+			        }
+			    },
+
+			    // UUID COMPLEMENTO → solo XML en Bóveda
+			    { 
+			        data: "uuidComplemento",
+			        render: function(data, type, row) {
+			            if (!data) return "";
+
+			            return '<a href="javascript:verXMLBoveda(\'' + data + '\');" ' +
+			                   'title="Ver XML complemento en Bóveda">' +
+			                   '<i class="fa fa-file-code-o"></i> ' + data + '</a>';
+			        }
+			    },
+
+			    { data: "estatus" }
+			],
+
+
+
             drawCallback: function () {
                 $('[data-toggle="tooltip"]').tooltip();
             },
@@ -219,6 +245,24 @@ function refrescarHistorialPagos() {
    		 alert('abrirBitacora()_'+e);
    	 }
     }
+	
+	// =========================================================
+	// Abrir XML en Bóveda reutilizando mostrarXMLHistorial.jsp
+	// =========================================================
+	function verXMLBoveda(uuid) {
+	    try {
+	        // uuid: UUID que ya existe en la tabla BOVEDA.UUID
+	        document.getElementById('uuidHistorialP').value = uuid;   // hidden name="f"
+	        document.frmHistorialXML.submit();
+	    } catch (e) {
+	        alert('verXMLBoveda()_' + e);
+	    }
+	}
+
+
+	
+
+
 	
 
 
