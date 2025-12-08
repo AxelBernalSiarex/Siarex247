@@ -207,4 +207,41 @@ public class HistorialPagosAction extends HistorialPagosSupport {
 		return null;
 	}
 	
+	public String consultarUltimaFecha() {
+	    HttpServletRequest request = ServletActionContext.getRequest();
+	    HttpServletResponse response = ServletActionContext.getResponse();
+
+	    response.setContentType("application/json; charset=UTF-8");
+	    response.setCharacterEncoding("UTF-8");
+
+	    PrintWriter out = null;
+	    Connection con = null;
+	    ResultadoConexion rc = null;
+
+	    JSONObject json = new JSONObject();
+	    HistorialPagosBean bean = new HistorialPagosBean();
+
+	    try {
+	        out = response.getWriter();
+	        SiarexSession session = ObtenerSession.getSession(request);
+	        if (session == null) throw new Exception("Sesión expirada.");
+
+	        rc = getConnection(session.getEsquemaEmpresa());
+	        con = rc.getCon();
+
+	        String fecha = bean.obtenerFechaUltimaActualizacion(con, rc.getEsquema());
+	        json.put("fechaDescarga", Utils.noNulo(fecha));
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("Error consultarUltimaFecha", e);
+	        json.put("fechaDescarga", "");
+	    } finally {
+	        try { if (out != null) out.print(json.toString()); } catch(Exception ex){}
+	        try { if (con != null) con.close(); } catch(Exception ex){}
+	    }
+
+	    return NONE;
+	}
+
+	
 }

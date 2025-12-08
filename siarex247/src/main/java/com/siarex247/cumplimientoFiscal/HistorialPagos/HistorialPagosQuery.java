@@ -17,6 +17,11 @@ public class HistorialPagosQuery {
     	    + "BOVEDA B ON A.UUID_FACTURA = B.UUID " +
     	    "WHERE A.RFC = ? AND A.ESTATUS IN (?, ?) " +
     	    "ORDER BY A.FECHA_PAGO";
+    
+    public static String getFechaUltimaActualizacion(String esquema) {
+        return "SELECT MAX(FECHAALTA) AS FECHA FROM HISTORICO_PROCESOS WHERE TIPO_PROCESO = 'VCB'";
+    }
+
 
     
     public static String getLista(String esquema) {

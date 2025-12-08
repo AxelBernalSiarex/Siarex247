@@ -257,4 +257,26 @@ public class HistorialPagosBean {
     	}
     	return "";
     }
+    
+    public String obtenerFechaUltimaActualizacion(Connection con, String esquema) {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        String fecha = "";
+
+        try {
+            stmt = con.prepareStatement(HistorialPagosQuery.getFechaUltimaActualizacion(esquema));
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                fecha = Utils.noNulo(rs.getString("FECHA"));
+            }
+        } catch (Exception e) {
+            logger.error("Error obtenerFechaUltimaActualizacion:", e);
+        } finally {
+            try { if (rs != null) rs.close(); } catch(Exception ex){}
+            try { if (stmt != null) stmt.close(); } catch(Exception ex){}
+        }
+
+        return fecha;
+    }
+
 }

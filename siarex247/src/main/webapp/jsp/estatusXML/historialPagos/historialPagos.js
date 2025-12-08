@@ -3,6 +3,7 @@ var intervaloVerificacion = null;
 
 $(document).ready(function() {
     try {
+		consultarFechaHistorial();
         tablaHistorial = $('#tablaHistorialPagos').DataTable({
             paging      : true,
             retrieve    : true,
@@ -92,14 +93,28 @@ $(document).ready(function() {
 			drawCallback: function () {
                 $('[data-toggle="tooltip"]').tooltip();
             },
-            initComplete: function () {
-              
-                var btns = $('.dt-button');
-                btns.removeClass('dt-button');
+			initComplete: function () {
 
-                var btnsSubMenu = $('.dtb-b2');
-                btnsSubMenu.addClass('dropdown-menu dropdown-menu-end py-0 show');
-            }
+			
+			    var btns = $('.dt-button');
+			    btns.removeClass('dt-button');
+
+			    var btnsSubMenu = $('.dtb-b2');
+			    btnsSubMenu.addClass('dropdown-menu dropdown-menu-end py-0 show');
+
+			    try {
+			        var dtButtonsContainer = $('.dt-buttons'); 
+			        if (dtButtonsContainer.length) {           
+			            dtButtonsContainer.addClass('d-flex align-items-center justify-content-between w-100');
+			            $('#fechaHistorialContainer').prependTo(dtButtonsContainer);
+			            dtButtonsContainer.find('button').addClass('ms-auto');
+			        }
+			    } catch(e){
+			        console.error('Error moviendo fecha:', e);
+			    }
+
+			}
+
         });
 
     } catch(e) {
@@ -246,6 +261,22 @@ function refrescarHistorialPagos() {
 	        alert('verXMLBoveda()_' + e);
 	    }
 	}
+	
+	function consultarFechaHistorial() {
+	    $.ajax({
+	        url  : '/siarex247/cumplimientoFiscal/historicoPagos/consultarUltimaFecha.action',
+	        type : 'POST',
+	        data : null,
+	        dataType : 'json',
+	        success  : function(data) {
+	            if (!$.isEmptyObject(data)) {
+	                document.getElementById("HP_ETQ_FECHA").innerHTML =
+	                    "Última actualización: " + (data.fechaDescarga || "N/A");
+	            }
+	        }
+	    });
+	}
+
 
 
 	

@@ -54,10 +54,21 @@
     </div>
   </div>
 </div>
+
+<div id="fechaHistorialContainer" 
+     style="font-size:20px;color:#555;display:flex;align-items:center;">
+    <i class="fas fa-clock me-1"></i>
+    <span id="HP_ETQ_FECHA">Última actualización: ---</span>
+</div>
+
+
 	
 	<div class="card-body bg-light pt-0" style="padding-top: 10px !important;">
+	
+	
 		<div class="tab-content">
 			<div class="tab-pane preview-tab-pane active" role="tabpanel" id="tab-historial">
+			
 				<table id="tablaHistorialPagos" class="table mb-0 data-table fs--1">
 					<thead class="bg-200 text-900">
 						<tr>
