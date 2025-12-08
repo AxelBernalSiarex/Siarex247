@@ -1,0 +1,23 @@
+*******************Sistema de Administracion de XML - Ordenes de Compra************************************************************************************************************************************
+*******************************Listado de Ordenes a Cargar*************************************************************************************************************************************************
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+No. Orden de Compra | 	  Descripcion	    |    Tipo Moneda  |	    Monto      |     RFC       | VENDOR_ID   | REQUISICION	| NUMERO DE EMPLEADO |  USUARIO     |SERVICIO RECIBIDO|USO DE CFDI | CLAVE DE PRODUCTO SERVICIO
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+XXXXXXXXXXXXXXXXXXXX|XXXXXXXXXXXXXXXXXXXXXXX|XXXXXXXXXXXXXXXXX|XXXXXXXXXXXXXXXX|XXXXXXXXXXXXXXX|XXXXXXXXXXXXX|XXXXXXXXXXXXXXXXXX|XXXXXXXXXXXXXXXXXXXX| XXXXXXXXXXX  |XXXXXXXXXXXXXXXXX|XXXXXXXXXXXX| XXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+
+Si el campo REQUISICION = N, este campo se debe omitir
+
+
+EJEMPLOS CON REQUISICION = N
+70000||MXN|3216.83|MUVR7512295L3|100000002|17211|1|G03|81112502
+70001||MXN|35423.43|MUVR7512295L3|100000002|17211|1|G03|8111603
+70002||MXN|27764.31|MUVR7512295L3|100000002|17211|1|G03|81112603
+
+
+
+EJEMPLOS CON REQUISICION = S
+70000||MXN|3216.83|MUVR7512295L3|100000002|20000|17211|1|G03|81112502
+70001||MXN|35423.43|MUVR7512295L3|100000002|20001|17211|1|G03|8111603
+70002||MXN|27764.31|MUVR7512295L3|100000002|20001|17211|1|G03|81112603

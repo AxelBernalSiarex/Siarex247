@@ -1,0 +1,314 @@
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+       "https://struts.apache.org/dtds/struts-6.0.dtd">
+
+<struts>
+
+
+	  <package name="cumplimientoFiscalValidarXML" namespace="/cumplimientoFiscal/validarXML" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.ValidarXML.ValidarXMLAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="cumplimientoFiscalExportarXML" namespace="/cumplimientoFiscal/exportarXML" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.ExportarXML.ExportarXMLAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+     <package name="cumplimientoFiscalBovedaRecibidos" namespace="/cumplimientoFiscal/boveda/recibidos" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.Boveda.BovedaAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+    <package name="cumplimientoFiscalBovedaEmitidos" namespace="/cumplimientoFiscal/boveda/emitidos" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.BovedaEmitidos.BovedaEmitidosAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+    <package name="cumplimientoFiscalBovedaNomina" namespace="/cumplimientoFiscal/boveda/nomina" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.BovedaNomina.BovedaNominaAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="cumplimientoFiscalConciliacion" namespace="/cumplimientoFiscal/conciliacion/ordenes" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.Conciliacion.ConciliacionAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="cumplimientoFiscalConciliacionBoveda" namespace="/cumplimientoFiscal/conciliacion/boveda" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.ConciliacionBoveda.ConciliacionBovedaAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="cumplimientoFiscalConciliacionCP" namespace="/cumplimientoFiscal/conciliacion/cartaPorte" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.ConciliacionCP.ConciliacionCPAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="cumplimientoFiscalPedimentos" namespace="/cumplimientoFiscal/pedimentos" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.Pedimentos.PedimentosAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+    <package name="cumplimientoFiscalDescargaRecibidos" namespace="/cumplimientoFiscal/descargaSAT/recibidos" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.DescargaSAT.DescargaSATAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="cumplimientoFiscalDescargaEmitidos" namespace="/cumplimientoFiscal/descargaSAT/emitidos" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.DescargaSAT.DescargaSATAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+    <package name="cumplimientoFiscalDescargaNomina" namespace="/cumplimientoFiscal/descargaSAT/nomina" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.DescargaSAT.DescargaSATAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+    <package name="cumplimientoFiscalListaNegra" namespace="/cumplimientoFiscal/listaNegra" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.ListaNegra.ListaNegraAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+     <package name="cumplimientoFiscalListaNegraEmp" namespace="/cumplimientoFiscal/listaNegraEmpresa" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.ListaNegraEmpresa.ListaNegraEmpresaAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="cumplimientoFiscalListaHistoricoP" namespace="/cumplimientoFiscal/historicoPagos" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.cumplimientoFiscal.HistorialPagos.HistorialPagosAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+</struts>

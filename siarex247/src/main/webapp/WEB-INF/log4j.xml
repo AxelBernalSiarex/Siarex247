@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+	<appender name="CONSOLA" class="org.apache.log4j.ConsoleAppender">
+		<param name="target" value="System.err"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="siarex247.MS%p_ %l_%p : %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="LOGFILE" class="org.apache.log4j.RollingFileAppender">
+ 	   <param name="File" value="/opt/tomcat11/LOGS_APP/SIAREX_FALCON/LOG_SIAREX247.log"/>
+		<param name="MaxFileSize" value="10000KB"/>
+		<param name="MaxBackupIndex" value="10"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%d{ISO8601}] siarex247.MS%-4p_ %C.%M(java:%L)_%p : %m%n" />
+		</layout>
+	</appender>
+
+    <root>
+		<!--Los posibles valoresde priority son : DEBUG, INFO, WARN, ERROR, FATAL-->
+		<priority value ="info" /> 
+		<appender-ref ref="CONSOLA"/>
+	</root>
+</log4j:configuration>

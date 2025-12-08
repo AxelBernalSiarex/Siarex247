@@ -1,0 +1,2 @@
+RFC|FechaPago|UUID|TipoMoneda|Total
+XXXXXXXXXX|jshdjsdhs-asdasdas-asdasd-asdasd|MXN|2531.25

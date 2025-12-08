@@ -1,0 +1,170 @@
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+       "https://struts.apache.org/dtds/struts-6.0.dtd">
+
+<struts>
+
+
+	  <package name="configOrdenes" namespace="/configSistema/configOrdenes" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.configSistema.ConfOrdenes.ConfOrdenesAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="cierreAnio" namespace="/configSistema/cierreAnnio" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.configSistema.CierreAnnio.CierreAnnioAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+    <package name="correosRespaldo" namespace="/configSistema/correosRespaldo" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.configSistema.CorreosRespaldo.CorreosRespaldoAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="configAdicionales" namespace="/configSistema/configAdicionales" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.configSistema.ConfigAdicionales.ConfigAdicionalesAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="configAdmin" namespace="/configSistema/configAdmin" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.configSistema.ConfigAdmin.ConfigAdminAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+     <package name="certificadosSAT" namespace="/configSistema/certificadosSAT" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.configSistema.CertificadoSAT.CertificadoSATAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="alertaBoveda" namespace="/configSistema/alertaBoveda" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.configSistema.AlertaConciliacion.AlertaConciliacionAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="alertaComplemento" namespace="/configSistema/alertaComplemento" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.configSistema.AlertaComplemento.AlertaComplementoAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+       
+    </struts>

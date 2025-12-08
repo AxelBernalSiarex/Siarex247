@@ -1,0 +1,70 @@
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+       "https://struts.apache.org/dtds/struts-6.0.dtd">
+
+<struts>
+
+
+	  <package name="visorDashboard" namespace="/visor/dashboard" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.visor.TableroVisor.TableroVisorAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+     <package name="visorTablero" namespace="/visor/tablero" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.visor.VisorOrdenes.VisorOrdenesAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="visorMonitor" namespace="/visor/monitor360" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.dashboard.Monitor360.Monitor360Action" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+</struts>

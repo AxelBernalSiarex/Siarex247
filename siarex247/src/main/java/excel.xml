@@ -1,0 +1,260 @@
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+       "https://struts.apache.org/dtds/struts-6.0.dtd">
+
+<struts>
+
+
+	  <package name="excel" namespace="/excel" extends="struts-default, json-default" strict-method-invocation="false">
+	  
+	  	<action name="exportComplementosZIP" class="com.siarex247.cumplimientoFiscal.Conciliacion.ConciliacionAction" method="exportComplementosZIP">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="siarexComplementosXML.zip"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZip.jsp</result>  
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+        
+        <action name="descargarPedimento" class="com.siarex247.cumplimientoFiscal.Pedimentos.PedimentosAction" method="exportPedimentoZIP">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="pedimentoXML.zip"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZip.jsp</result>
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+
+		 <action name="descargarBoveda" class="com.siarex247.cumplimientoFiscal.Boveda.BovedaAction" method="exportBovedaZIP">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="${reportFile}"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZip.jsp</result>
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+  		<action name="exportXMLaEXCEL" class="com.siarex247.cumplimientoFiscal.Boveda.BovedaAction" method="convXMLAExcel">
+    		<result name="success" type="stream">
+  				<param name="contentType">application/octet-stream</param>
+  				<param name="inputName">inputStream</param>
+  				<param name="contentDisposition">attachment;filename="${reportFile}"</param>
+  				<param name="bufferSize">102400000</param>
+			</result>
+			<result name="ERROR" >/jsp/errorZip.jsp</result>	
+			<result name="login" type="redirect">/registro/index.action</result>		
+  		</action>
+
+		<action name="exportCertificados" class="com.siarex247.catalogos.Proveedores.ProveedoresAction" method="exportarCertificados">
+    		<result name="success" type="stream">
+  				<param name="contentType">application/octet-stream</param>
+  				<param name="inputName">inputStream</param>
+  				<param name="contentDisposition">attachment;filename="siarexCertificados.zip"</param>
+  				<param name="bufferSize">102400000</param>
+			</result>
+			<result name="ERROR" >/jsp/errorZIP.jsp</result>	
+  		</action>
+  		
+  		
+  		<!-- Exportar visor -->
+        
+        <action name="exportarPlantilla" class="com.siarex247.visor.VisorExportar.VisorExportarAction" method="exportarPlantilla">
+   			<result name="success" type="stream">
+    			<param name="contentDisposition">attachment;filename="${reportFile}"</param>
+    			<param name="contentType">application/octet-stream</param>
+    			<param name="inputName">inputStream</param>
+    			<param name="bufferSize">102400000</param>
+    		</result>
+    		<result name="login" type="redirect">/registro/index.action</result>
+  		</action>
+  		
+  		<action name="exportarFacturas" class="com.siarex247.visor.VisorExportar.VisorExportarAction" method="exportarFacturas">
+    		<result name="success" type="stream">
+  				<param name="contentType">application/octet-stream</param>
+  				<param name="inputName">inputStream</param>
+  				<param name="contentDisposition">attachment;filename="siarexXML.zip"</param>
+  				<param name="bufferSize">102400000</param>
+			</result>
+			<result name="login" type="redirect">/registro/index.action</result>		
+  		</action>
+  		
+  		<action name="exportarLayOut" class="com.siarex247.visor.VisorExportar.VisorExportarAction" method="exportarLayOut">
+    		<result name="success" type="stream">
+  				<param name="contentType">application/octet-stream</param>
+  				<param name="inputName">inputStream</param>
+  				<param name="contentDisposition">attachment;filename="siarexCSV.csv"</param>
+  				<param name="bufferSize">102400000</param>
+			</result>
+			<result name="login" type="redirect">/registro/index.action</result>		
+  		</action>
+  		
+  		<action name="descargarFacturas" class="com.siarex247.cumplimientoFiscal.ExportarXML.ExportarXMLAction" method="iniciarDescarga">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="siarexInvoice.zip"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZIP.jsp</result>
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+        
+        
+        <action name="exportExcelDescargaSAT" class="com.siarex247.cumplimientoFiscal.DescargaSAT.DescargaSATAction" method="generaReporte">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="siarexDescargaSAT.xlsx"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZIP.jsp</result>
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+        
+        
+        <action name="exportExcelBovedaXML" class="com.siarex247.cumplimientoFiscal.Boveda.BovedaAction" method="exportExcel">
+    		<result name="success" type="stream">
+  				<param name="contentType">application/octet-stream</param>
+  				<param name="inputName">inputStream</param>
+  				<param name="contentDisposition">attachment;filename="${reportFile}"</param>
+  				<param name="bufferSize">102400000</param>
+			</result>
+            <result name="ERROR" >/jsp/errorZIP.jsp</result>
+  		</action>
+  		
+  		
+  		 <action name="descargarBovedaEmitidos" class="com.siarex247.cumplimientoFiscal.BovedaEmitidos.BovedaEmitidosAction" method="exportBovedaZIP">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="bovedaEmitidosXML.zip"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZip.jsp</result>
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+        
+         <action name="exportExcelBovedaEmitidos" class="com.siarex247.cumplimientoFiscal.BovedaEmitidos.BovedaEmitidosAction" method="exportExcel">
+    		<result name="success" type="stream">
+  				<param name="contentType">application/octet-stream</param>
+  				<param name="inputName">inputStream</param>
+  				<param name="contentDisposition">attachment;filename="siarexBovedaXM_EmitidosL.xlsx"</param>
+  				<param name="bufferSize">102400000</param>
+			</result>
+            <result name="ERROR" >/jsp/errorZIP.jsp</result>
+  		</action>
+  		
+  		<action name="exportXMLaEXCELEmitidos" class="com.siarex247.cumplimientoFiscal.BovedaEmitidos.BovedaEmitidosAction" method="convXMLAExcel">
+    		<result name="success" type="stream">
+  				<param name="contentType">application/octet-stream</param>
+  				<param name="inputName">inputStream</param>
+  				<param name="contentDisposition">attachment;filename="${reportFile}"</param>
+  				<param name="bufferSize">102400000</param>
+			</result>
+			<result name="ERROR" >/jsp/errorZip.jsp</result>	
+			<result name="login" type="redirect">/registro/index.action</result>		
+  		</action>
+  		
+  		<action name="exportExcelDescargaEmitidos" class="com.siarex247.cumplimientoFiscal.DescargaSAT.DescargaSATAction" method="generaReporteEmitidos">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="siarexDescargaEmitidos.xlsx"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZIP.jsp</result>
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+        <action name="exportExcelDescargaNomina" class="com.siarex247.cumplimientoFiscal.DescargaSAT.DescargaSATAction" method="generaReporteNomina">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="siarexDescargaNomina.xlsx"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZIP.jsp</result>
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+        
+        <action name="exportExcelBovedaNomina" class="com.siarex247.cumplimientoFiscal.BovedaNomina.BovedaNominaAction" method="exportExcel">
+    		<result name="success" type="stream">
+  				<param name="contentType">application/octet-stream</param>
+  				<param name="inputName">inputStream</param>
+  				<param name="contentDisposition">attachment;filename="siarexBovedaXML_Nomina.xlsx"</param>
+  				<param name="bufferSize">102400000</param>
+			</result>
+            <result name="ERROR" >/jsp/errorZIP.jsp</result>
+  		</action>
+        
+        
+         <action name="descargarBovedaNominaZIP" class="com.siarex247.cumplimientoFiscal.BovedaNomina.BovedaNominaAction" method="exportBovedaZIP">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="bovedaNominaXML.zip"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZip.jsp</result>
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+        
+         <action name="reporteResumen" class="com.siarex247.cumplimientoFiscal.BovedaNomina.BovedaNominaAction" method="reporteResumen">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="reporteResumen.xlsx"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZip.jsp</result>
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+        
+         <action name="reporteDetalle" class="com.siarex247.cumplimientoFiscal.BovedaNomina.BovedaNominaAction" method="reporteDetalle">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="reporteDetalle.xlsx"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZip.jsp</result>
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+        
+         <action name="reporteNomina" class="com.siarex247.cumplimientoFiscal.BovedaNomina.BovedaNominaAction" method="reporteNomina">
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">inputStream</param>
+                <param name="contentDisposition">attachment;filename="reporteNomina.xlsx"</param>
+                <param name="bufferSize">102400000</param>
+            </result>
+            <result name="ERROR" >/jsp/errorZip.jsp</result>
+            <result name="login" type="redirect">/registro/index.action</result>        
+        </action>
+        
+        <action name="exportFacturasDetails" class="com.siarex247.visor.VisorOrdenes.VisorOrdenesAction" method="exportFacturasDetails">
+   			<result name="success" type="stream">
+    			<param name="contentDisposition">attachment;filename="${reportFile}"</param>
+    			<param name="contentType">application/vnd.ms-excel</param>
+    			<param name="inputName">inputStream</param>
+    			<param name="bufferSize">102400000</param>
+    		</result>
+    		<result name="login" type="redirect">/registro/index.action</result>
+  		</action>
+  		
+         <action name="descargarListaNegraPDF" class="com.siarex247.cumplimientoFiscal.ListaNegra.ListaNegraAction" method="descargarListaNegraPDF">
+   			<result name="success" type="stream">
+    			<param name="contentDisposition">attachment;filename="${reportFile}"</param>
+    			<param name="contentType">application/pdf</param>
+    			<param name="inputName">inputStream</param>
+    			<param name="bufferSize">102400000</param>
+    		</result>
+    		<result name="login" type="redirect">/registro/index.action</result>
+  		</action>
+	    </package>
+
+</struts>
