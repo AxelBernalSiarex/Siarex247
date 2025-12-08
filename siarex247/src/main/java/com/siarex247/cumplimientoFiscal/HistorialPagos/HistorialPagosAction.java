@@ -11,6 +11,8 @@ import org.apache.struts2.action.Action;
 import org.json.JSONObject;
 
 import com.siarex247.bd.ResultadoConexion;
+import com.siarex247.seguridad.Accesos.AccesoBean;
+import com.siarex247.seguridad.Accesos.EmpresasForm;
 import com.siarex247.seguridad.Bitacora.BitacoraBean;
 import com.siarex247.seguridad.Bitacora.BitacoraForm;
 import com.siarex247.seguridad.Bitacora.BitacoraModel;
@@ -102,7 +104,22 @@ public class HistorialPagosAction extends HistorialPagosSupport {
                 
                 
                 HashMap<String, String> mapaResultado = new HashMap<>();
-                mapaResultado = bean.procesarArchivoTXT(con, rc.getEsquema(), fileTXT.getAbsolutePath(), fileTXT.getName(), getUsuario(request));
+             //   mapaResultado = bean.procesarArchivoTXT(con, rc.getEsquema(), fileTXT.getAbsolutePath(), fileTXT.getName(), getUsuario(request));
+             // === NUEVO: Obtener RFC real de la empresa ===
+                AccesoBean accesoBean = new AccesoBean();
+                EmpresasForm empresaForm = accesoBean.consultaEmpresaEsquema(session.getEsquemaEmpresa());
+                String rfcEmpresa = empresaForm.getRfc();
+
+                // === LLAMADA CON RFC EMPRESA (nuevo parámetro) ===
+                mapaResultado = bean.procesarArchivoTXT(
+                        con,
+                        rc.getEsquema(),
+                        fileTXT.getAbsolutePath(),
+                        fileTXT.getName(),
+                        getUsuario(request),
+                        rfcEmpresa   // <<< NUEVO
+                );
+
                 //logger.info("ERROR_COLUMNAS===>"+mapaResultado.get("ERROR_COLUMNAS"));
                 if ("false".equalsIgnoreCase(mapaResultado.get("ERROR_COLUMNAS"))) {
     				int idBitacora = Integer.parseInt( mapaResultado.get("ID_TAREA") );

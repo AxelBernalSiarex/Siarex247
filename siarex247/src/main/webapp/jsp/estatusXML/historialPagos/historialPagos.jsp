@@ -32,7 +32,7 @@
 						<span class="fas fa-plus" data-fa-transform="shrink-3 down-2"></span><span class="d-none d-sm-inline-block ms-1" id="HISTORIAL_PAGOS_BTN_OPCIONES"> Opciones </span>
 					</button>
 					<div class="dropdown-menu dropdown-menu-end border py-2" aria-labelledby="historialPagosMenu">
-						<a id="menu_CargarHistorial" class="dropdown-item" href="javascript:abreModalHistorial();">Cargar Historial</a>
+						<a id="menu_CargarHistorial" class="dropdown-item" href="javascript:abreModalHistorial();">Cargar relacion de pagos</a>
 					</div>
 				</div>
 			</div>

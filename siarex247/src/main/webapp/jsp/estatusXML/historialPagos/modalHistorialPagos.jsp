@@ -44,7 +44,7 @@
 							<div class="alert alert-info border-2 d-flex align-items-center" role="alert">
 								<div class="bg-info me-3 icon-item"><span class="fas fa-info-circle text-white fs-3"></span></div>
 								<p class="mb-0 flex-1">
-                                    <strong>Formato:</strong> RFC|FECHA|UUID|MONEDA|TOTAL<br>
+                                    <strong>Formato:</strong> RFC(EMPRESA)|RFC(PROOVEDOR)|FECHA(YYYY-MM-DD)|UUID|MONEDA|TOTAL<br>
                                 </p>
 							</div>
 						</div>
