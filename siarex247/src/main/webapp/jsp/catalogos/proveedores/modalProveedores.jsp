@@ -138,7 +138,7 @@
 								 					<label class="col-sm-2 col-form-label" for="estado" id="CAT_PROVEEDORES_Etiqueta_Estado">Estado</label>
 													<div class="col-sm-4">
 								   						<div class="form-group">
-															<select class="form-select" id="estado" name="estado" onchange="cargaCiudad(this.value, '');" required>
+															<select class="form-select" id="estado" name="estado" onchange="cargaCiudad(this.value, '');" >
 														
 															</select>
 														</div>
@@ -317,7 +317,7 @@
 								 					<label class="col-sm-2 col-form-label" for="ciudad" id="CAT_PROVEEDORES_Etiqueta_Ciudad">Ciudad</label>
 													<div class="col-sm-4">
 								   						<div class="form-group">
-															<select class="form-select" id="ciudad" name="ciudad" required>
+															<select class="form-select" id="ciudad" name="ciudad" >
 														
 															</select>
 														</div>

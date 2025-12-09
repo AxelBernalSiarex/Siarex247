@@ -2,7 +2,7 @@ package com.siarex247.cumplimientoFiscal.HistorialPagos;
 
 public class HistorialPagosQuery {
 
-    private static String lista = "select ID_REGISTRO, RFC, FECHA_PAGO, UUID_FACTURA, TIPO_MONEDA, TOTAL, ESTATUS,  CODIGO_ERROR, UUID_COMPLEMENTO  from HISTORIAL_PAGOS order by RFC";
+    private static String lista = "select ID_REGISTRO, RFC, FECHA_PAGO, UUID_FACTURA, TIPO_MONEDA, TOTAL, ESTATUS,  CODIGO_ERROR, UUID_COMPLEMENTO  from HISTORIAL_PAGOS ";
 
     private static String insertar = "insert into <<esquema>>.HISTORIAL_PAGOS (RFC, FECHA_PAGO, UUID_FACTURA, TIPO_MONEDA, TOTAL, USUARIO_TRAN) values (?,?,?,?,?, ?)";
 

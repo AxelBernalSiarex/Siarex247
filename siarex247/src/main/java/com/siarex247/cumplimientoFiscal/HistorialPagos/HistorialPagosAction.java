@@ -11,11 +11,15 @@ import org.apache.struts2.action.Action;
 import org.json.JSONObject;
 
 import com.siarex247.bd.ResultadoConexion;
+import com.siarex247.catalogos.Proveedores.ProveedoresBean;
+import com.siarex247.catalogos.Proveedores.ProveedoresForm;
 import com.siarex247.seguridad.Accesos.AccesoBean;
 import com.siarex247.seguridad.Accesos.EmpresasForm;
 import com.siarex247.seguridad.Bitacora.BitacoraBean;
 import com.siarex247.seguridad.Bitacora.BitacoraForm;
 import com.siarex247.seguridad.Bitacora.BitacoraModel;
+import com.siarex247.seguridad.Usuarios.UsuariosBean;
+import com.siarex247.seguridad.Usuarios.UsuariosForm;
 import com.siarex247.session.ObtenerSession;
 import com.siarex247.session.SiarexSession;
 import com.siarex247.utils.Utils;
@@ -48,9 +52,32 @@ public class HistorialPagosAction extends HistorialPagosSupport {
 
             rc = getConnection(session.getEsquemaEmpresa());
             con = rc.getCon();
+            
+            // ===== Usuario / permisos =====
+	        UsuariosBean uBean = new UsuariosBean();
+	        UsuariosForm uForm = uBean.datosUsuario(con, rc.getEsquema(), getUsuario(request));
+	        int  claveProveedor = 0;
+	        
+	        
+	        
+	        String rfcProveedor = "";
 
+	        if (uForm.getIdPerfil() == 4) { // Proveedor
+	            claveProveedor = Integer.parseInt(uForm.getIdEmpleado().substring(5));
+	           ProveedoresBean provBean = new ProveedoresBean();
+	           ProveedoresForm provForm = provBean.consultarProveedor(con, rc.getEsquema() , claveProveedor);
+	           rfcProveedor = provForm.getRfc();
+	           
+	        } 
+	        
+	        
+	        
+	        
+
+                       
+            
             HistorialPagosBean bean = new HistorialPagosBean();
-            model.setData(bean.listarHistorialPagos(con, session.getEsquemaEmpresa()));
+            model.setData(bean.listarHistorialPagos(con, session.getEsquemaEmpresa(), rfcProveedor ));
             model.setCodError("000");
 
         } catch (Exception e) {

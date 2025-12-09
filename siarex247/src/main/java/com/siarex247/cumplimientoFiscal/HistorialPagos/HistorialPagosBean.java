@@ -75,18 +75,44 @@ public class HistorialPagosBean {
 
 
 
-    public ArrayList<HistorialPagosForm> listarHistorialPagos(Connection con, String esquema) {
+    public ArrayList<HistorialPagosForm> listarHistorialPagos(Connection con, String esquema, String rfc) {
         ArrayList<HistorialPagosForm> lista = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
+        StringBuffer sbQuery = new StringBuffer();
 
         try {
-            ps = con.prepareStatement( HistorialPagosQuery.getLista(esquema) );
+        	sbQuery.append(HistorialPagosQuery.getLista(esquema));
+        	
+        	if ("".equals(rfc)) {
+        		sbQuery.append("  order by FECHA_PAGO");
+        		
+        	} else {
+        	   sbQuery.append(" where RFC = ? order by FECHA_PAGO");
+        	}
+        	
+        	
+            ps = con.prepareStatement(sbQuery.toString());
+            
+            if (!"".equals(rfc)) {
+            	ps.setString(1, rfc);
+            }
+            
+            
             logger.info("🔁 DetalleHistorialP N → " + ps);
+            
             rs = ps.executeQuery();
 // ID_REGISTRO, RFC, FECHA_PAGO, UUID_FACTURA, TIPO_MONEDA, TOTAL, ESTATUS,  CODIGO_ERROR, UUID_COMPLEMENTO
             String estatus = "";
             String codError = "";
+            
+            
+            
+            
+            
+            
+            
+            
             while (rs.next()) {
                 HistorialPagosForm historialPagosForm = new HistorialPagosForm();
                 estatus = Utils.noNulo(rs.getString(7));

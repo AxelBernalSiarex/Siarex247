@@ -22,7 +22,7 @@
             <div class="modal-body p-0">
 				<div class="rounded-top-3 py-3 ps-4 pe-6 bg-light">
 	   				<h5 class="mb-1" id="HISTORIAL_PAGOS_MODAL_TITULO">
-						Cargar Historial
+						Cargar relacion de pago
 	   				</h5>
 				</div>
                 
