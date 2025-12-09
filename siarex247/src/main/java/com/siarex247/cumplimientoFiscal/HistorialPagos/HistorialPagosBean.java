@@ -9,6 +9,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import com.siarex247.catalogos.Proveedores.ProveedoresBean;
+import com.siarex247.catalogos.Proveedores.ProveedoresForm;
 import com.siarex247.seguridad.Bitacora.BitacoraBean;
 import com.siarex247.utils.Utils;
 import com.siarex247.utils.UtilsFechas;
@@ -19,27 +21,58 @@ public class HistorialPagosBean {
     public static final Logger logger = Logger.getLogger("siarex247");
     private PreparedStatement stmt = null;
     
-   public int insertarHistorialPago(HistorialPagosForm historialPagosForm) {
-        int res = 0;
-        try {
-        	// logger.info("🔁 ENTRO A INSERTAR N → " + ps);
-        	stmt.setString(1, historialPagosForm.getRfc());
-        	stmt.setString(2, historialPagosForm.getFechaPago());
-        	stmt.setString(3, historialPagosForm.getUuidFactura());
-        	stmt.setString(4, historialPagosForm.getTipoMoneda());
-        	stmt.setDouble(5, historialPagosForm.getTotal());
-        	stmt.setString(6, historialPagosForm.getUsuarioTran());
+    public int insertarHistorialPago(HistorialPagosForm historialPagosForm, Connection con, String esquema) {
 
-            res = stmt.executeUpdate();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+
+            // =====================================================
+            // 1) VALIDAR DUPLICADO SIN PROVOCAR EXCEPCIÓN SQL
+            // =====================================================
+            String sqlDup = HistorialPagosQuery.getValidarDuplicado(esquema);
+            ps = con.prepareStatement(sqlDup);
+            ps.setString(1, historialPagosForm.getUuidFactura());
+            rs = ps.executeQuery();
+
+            if (rs.next() && rs.getInt(1) > 0) {
+                return 0; // 0 = duplicado
+            }
+
+            rs.close();
+            ps.close();
+
+            // =====================================================
+            // 2) INSERTAR REGISTRO
+            // =====================================================
+            String sqlInsert = HistorialPagosQuery.getInsertar(esquema);
+            ps = con.prepareStatement(sqlInsert);
+
+            int i = 1;
+            ps.setString(i++, historialPagosForm.getRfc());
+            ps.setString(i++, historialPagosForm.getFechaPago());
+            ps.setString(i++, historialPagosForm.getUuidFactura());
+            ps.setString(i++, historialPagosForm.getTipoMoneda());
+            ps.setDouble(i++, historialPagosForm.getTotal());
+            ps.setString(i++, historialPagosForm.getUsuarioTran());
+
+            int res = ps.executeUpdate();
+
+            return (res > 0 ? 1 : -1);  // 1 = OK, -1 = error
 
         } catch (Exception e) {
-            Utils.imprimeLog("", e);
-            res = -100;
 
-        } 
+            Utils.imprimeLog("insertarHistorialPago", e);
+            return -1;
 
-        return res;
+        } finally {
+
+            try { if (rs != null) rs.close(); } catch (Exception e) {}
+            try { if (ps != null) ps.close(); } catch (Exception e) {}
+        }
     }
+
 
 
     public ArrayList<HistorialPagosForm> listarHistorialPagos(Connection con, String esquema) {
@@ -88,9 +121,10 @@ public class HistorialPagosBean {
             String rfcEmpresaBD) {
 
         HashMap<String, String> mapaResultado = new HashMap<>();
-        Integer resArreglo[] = {0, 0};
+        Integer resArreglo[] = {0, 0}; // [NG, OK]
 
         try {
+
             mapaResultado.put("BAND_MENSAJE", "OK");
             mapaResultado.put("OK", "0");
             mapaResultado.put("NG", "0");
@@ -108,28 +142,26 @@ public class HistorialPagosBean {
             List<String> lineScan = null;
             int numRegistro = 0;
 
-            // === ADAPTADO A 6 COLUMNAS (RFC_EMPRESA + RFC_PROVEEDOR) ===
             int totColumnas = 6;
 
             HistorialPagosForm historialPagosForm = new HistorialPagosForm();
+            ProveedoresBean provBean = new ProveedoresBean();
+            ProveedoresForm provForm = null;
 
             for (int x = 0; x < listaTXT.size(); x++) {
-                lineScan = Utils.parseLine(listaTXT.get(x), '|'); // ← IMPORTANTE: ahora es '|'
-                numRegistro++;
-                
-                lineScan = Utils.parseLine(listaTXT.get(x), ';');
-                numRegistro++;
 
-                // >>> NUEVO: Ignorar líneas vacías
+                // PARSEAR SOLO UNA VEZ
+                lineScan = Utils.parseLine(listaTXT.get(x), ';');
+
+                // Ignorar líneas vacías
                 if (lineScan == null || lineScan.size() == 0) {
-                    numRegistro--; // no contar línea vacía como registro
                     continue;
                 }
 
+                numRegistro++;
 
-                // ========= VALIDAR ENCABEZADOS ===========
+                // ===== ENCABEZADO =====
                 if (numRegistro == 1) {
-
                     if (lineScan.size() != totColumnas) {
                         mapaResultado.put("ERROR_COLUMNAS", "true");
                         break;
@@ -137,76 +169,123 @@ public class HistorialPagosBean {
                     continue;
                 }
 
-                // ===========================================
-                //  LECTURA DE CAMPOS (YA SON 6)
-                // ===========================================
+                // ==========================
+                //  LECTURA DE CAMPOS
+                // ==========================
                 String rfcEmpresaTXT = Utils.noNulo(lineScan.get(0));
-                String rfcProveedor   = Utils.eliminarGuiones(Utils.noNulo(lineScan.get(1)));
+                String rfcProveedor  = Utils.eliminarGuiones(Utils.noNulo(lineScan.get(1)));
 
                 historialPagosForm.setRfc(rfcProveedor);
                 historialPagosForm.setFechaPago(Utils.noNulo(lineScan.get(2)));
                 historialPagosForm.setUuidFactura(Utils.noNulo(lineScan.get(3)));
                 historialPagosForm.setTipoMoneda(Utils.noNulo(lineScan.get(4)));
-                historialPagosForm.setTotal(Utils.noNuloDouble(lineScan.get(5)));
+
+                // === TOTAL numérico ===
+                try {
+                    historialPagosForm.setTotal(Utils.noNuloDouble(lineScan.get(5)));
+                } catch (Exception e) {
+                    resArreglo[0]++;
+                    bitacoraBean.altaHistorico(con, esquema, numBitacora,
+                            String.valueOf(numRegistro),
+                            "El registro " + numRegistro + " contiene un TOTAL no numérico.");
+                    mapaResultado.put("BAND_MENSAJE", "ERROR");
+                    continue;
+                }
+
                 historialPagosForm.setUsuarioTran(usuarioHTTP);
 
-                // ===========================================
-                //  NUEVA VALIDACIÓN: RFC EMPRESA
-                // ===========================================
-                
+                // ==========================
+                // VALIDACIÓN: RFC EMPRESA
+                // ==========================
                 logger.info("[HP-TXT][RFC-VALIDACION] Registro: " + numRegistro
                         + " | RFC_EMPRESA_BD=" + rfcEmpresaBD
                         + " | RFC_EMPRESA_TXT=" + rfcEmpresaTXT);
-                
+
                 if (!rfcEmpresaTXT.equalsIgnoreCase(rfcEmpresaBD)) {
                     resArreglo[0]++;
                     bitacoraBean.altaHistorico(con, esquema, numBitacora,
                             String.valueOf(numRegistro),
-                            "El registro " + numRegistro + ", no coincide con el RFC de la empresa.");
+                            "El registro " + numRegistro + " no coincide con el RFC de la empresa.");
                     mapaResultado.put("BAND_MENSAJE", "ERROR");
-                    continue; // NO insertar
+                    continue;
                 }
 
-                // ===========================================
-                // VALIDACIONES EXISTENTES
-                // ===========================================
+                // ==========================
+                // VALIDACIÓN: RFC PROVEEDOR LONGITUD
+                // ==========================
                 if (rfcProveedor.length() != 12 && rfcProveedor.length() != 13) {
                     resArreglo[0]++;
                     bitacoraBean.altaHistorico(con, esquema, numBitacora,
                             String.valueOf(numRegistro),
-                            "El registro " + numRegistro + ", no cumple con la longitud del RFC");
+                            "El registro " + numRegistro + " tiene longitud de RFC proveedor inválida.");
                     mapaResultado.put("BAND_MENSAJE", "ERROR");
+                    continue;
+                }
 
-                } else if (!UtilsFechas.esFechaFormatoValido(historialPagosForm.getFechaPago())) {
+                // ==========================
+                // VALIDACIÓN: FECHA VÁLIDA
+                // ==========================
+                if (!UtilsFechas.esFechaFormatoValido(historialPagosForm.getFechaPago())) {
                     resArreglo[0]++;
                     bitacoraBean.altaHistorico(con, esquema, numBitacora,
                             String.valueOf(numRegistro),
-                            "El registro " + numRegistro + ", no cumple con el formato de la fecha de pago");
+                            "El registro " + numRegistro + " tiene formato de fecha inválido.");
                     mapaResultado.put("BAND_MENSAJE", "ERROR");
+                    continue;
+                }
 
-                } else if (!"MXN".equalsIgnoreCase(historialPagosForm.getTipoMoneda())
-                        && !"USD".equalsIgnoreCase(historialPagosForm.getTipoMoneda())) {
+                // ==========================
+                // VALIDACIÓN: MONEDA
+                // ==========================
+                if (!"MXN".equalsIgnoreCase(historialPagosForm.getTipoMoneda()) &&
+                    !"USD".equalsIgnoreCase(historialPagosForm.getTipoMoneda())) {
+
                     resArreglo[0]++;
                     bitacoraBean.altaHistorico(con, esquema, numBitacora,
                             String.valueOf(numRegistro),
-                            "El registro " + numRegistro + ", no cumple con el tipo de moneda (MXN/USD)");
+                            "El registro " + numRegistro + " tiene moneda inválida (solo MXN/USD).");
                     mapaResultado.put("BAND_MENSAJE", "ERROR");
+                    continue;
+                }
 
+                // ==========================
+                // VALIDACIÓN: RFC PROVEEDOR EXISTE
+                // ==========================
+                provForm = provBean.consultarProveedorXrfc(con, esquema, rfcProveedor);
+
+                logger.info(
+                    "\n[HP-TXT][PROVEEDOR]"
+                    + "\n - Registro          : " + numRegistro
+                    + "\n - RFC Proveedor TXT : " + rfcProveedor
+                    + "\n - RFC Catalogo      : " + (provForm != null ? provForm.getRfc() : "NO ENCONTRADO")
+                    + "\n - Clave Proveedor   : " + (provForm != null ? provForm.getClaveRegistro() : 0)
+                    + "\n--------------------------------------------"
+                );
+
+                if (provForm == null || provForm.getClaveRegistro() <= 0) {
+                    resArreglo[0]++;
+                    bitacoraBean.altaHistorico(con, esquema, numBitacora,
+                            String.valueOf(numRegistro),
+                            "El registro " + numRegistro + " contiene un proveedor NO registrado en el catálogo.");
+                    mapaResultado.put("BAND_MENSAJE", "ERROR");
+                    continue;
+                }
+
+                // ==========================
+                // INSERTAR
+                // ==========================
+                int res = insertarHistorialPago(historialPagosForm, con, esquema);
+
+
+                if (res > 0) {
+                    resArreglo[1]++;
                 } else {
-
-                    int res = insertarHistorialPago(historialPagosForm);
-
-                    if (res > 0) {
-                        resArreglo[1]++;
-                    } else {
-                        resArreglo[0]++;
-                        bitacoraBean.altaHistorico(con, esquema, numBitacora,
-                                String.valueOf(numRegistro),
-                                "El registro " + numRegistro + ", con folio fiscal "
-                                        + historialPagosForm.getUuidFactura()
-                                        + ", ya existe en nuestra base de datos");
-                        mapaResultado.put("BAND_MENSAJE", "ERROR");
-                    }
+                    resArreglo[0]++;
+                    bitacoraBean.altaHistorico(con, esquema, numBitacora,
+                            String.valueOf(numRegistro),
+                            "El registro " + numRegistro + " contiene un UUID duplicado: "
+                                    + historialPagosForm.getUuidFactura());
+                    mapaResultado.put("BAND_MENSAJE", "ERROR");
                 }
             }
 
@@ -219,12 +298,13 @@ public class HistorialPagosBean {
         } catch (Exception e) {
             logger.error("", e);
         } finally {
-            try {
-                if (stmt != null) stmt.close();
-            } catch (Exception ex) {}
+            try { if (stmt != null) stmt.close(); } catch (Exception ex) {}
         }
+
         return mapaResultado;
     }
+
+
 
     
     private String desEstatus(String estatus, String codError) {

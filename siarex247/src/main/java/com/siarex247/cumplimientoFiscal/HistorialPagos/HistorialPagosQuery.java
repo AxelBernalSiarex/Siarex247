@@ -21,6 +21,11 @@ public class HistorialPagosQuery {
     public static String getFechaUltimaActualizacion(String esquema) {
         return "SELECT MAX(FECHAALTA) AS FECHA FROM HISTORICO_PROCESOS WHERE TIPO_PROCESO = 'VCB'";
     }
+    
+    public static String getValidarDuplicado(String esquema) {
+        return "SELECT COUNT(*) FROM HISTORIAL_PAGOS WHERE UUID_FACTURA = ?";
+    }
+
 
 
     
