@@ -30,6 +30,12 @@ public class BovedaQuerys {
 	private static String buscarComplementoUUID =  "select UUID_COMPLEMENTO, ESTATUS from COMPLEMENTARIA_BOVEDA where UUID_FACTURA = ?";
 	private static String actualizarHistorialPagos =  "update HISTORIAL_PAGOS set ESTATUS = ?, CODIGO_ERROR = ?, UUID_COMPLEMENTO = ? where UUID_FACTURA = ?";
 	
+	private static String fechaboveda =  "SELECT MAX(FECHA_TRANS) AS FECHA FROM BOVEDA";
+	
+	public static String getUltimaFechaTrans(String esquema) {
+		return fechaboveda.replaceAll("<<esquema>>", esquema);
+	}
+
 	
 	public static String getBuscarBoveda(String esquema) {
 		return buscarBoveda.replaceAll("<<esquema>>", esquema);

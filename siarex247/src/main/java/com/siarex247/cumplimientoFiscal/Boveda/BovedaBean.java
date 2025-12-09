@@ -1666,5 +1666,34 @@ public class BovedaBean extends FiltrosBoveda{
 		        return fechaMinima;
 		    }
 		 
+		 public String obtenerUltimaFechaTrans(Connection con, String esquema) {
+			    PreparedStatement ps = null;
+			    ResultSet rs = null;
+			    String fecha = "---";
+
+			    try {
+			        ps = con.prepareStatement(BovedaQuerys.getUltimaFechaTrans(esquema));
+			        rs = ps.executeQuery();
+			       // logger.info(rs);
+
+			        if (rs.next()) {
+			            fecha = Utils.noNulo(rs.getString("FECHA"));
+			            if ("".equals(fecha)) {
+			                fecha = "---";
+			            }
+			        }
+
+			    } catch (Exception e) {
+			        Utils.imprimeLog("obtenerUltimaFechaTrans()", e);
+
+			    } finally {
+			        try { if (rs != null) rs.close(); } catch (Exception ex) {}
+			        try { if (ps != null) ps.close(); } catch (Exception ex) {}
+			    }
+
+			    return fecha;
+			}
+
+		 
 		 
 }

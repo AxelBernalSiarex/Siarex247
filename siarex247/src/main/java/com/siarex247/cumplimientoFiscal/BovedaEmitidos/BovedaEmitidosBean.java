@@ -1523,5 +1523,32 @@ public class BovedaEmitidosBean extends FiltrosBovedaEmitidos  {
 	        return fechaMinima;
 	    }
 	 
+	 public String obtenerUltimaFechaEmitidos(Connection con, String esquema) {
+		    PreparedStatement ps = null;
+		    ResultSet rs = null;
+		    String fecha = "---";
+
+		    try {
+		        ps = con.prepareStatement(BovedaEmitidosQuerys.getUltimaFechaEmitidos(esquema));
+		        rs = ps.executeQuery();
+
+		        if (rs.next()) {
+		            fecha = Utils.noNulo(rs.getString("FECHA"));
+		            if ("".equals(fecha)) {
+		                fecha = "---";
+		            }
+		        }
+
+		    } catch (Exception e) {
+		        Utils.imprimeLog("obtenerUltimaFechaEmitidos()", e);
+		    } finally {
+		        try { if (rs != null) rs.close(); } catch (Exception ex) {}
+		        try { if (ps != null) ps.close(); } catch (Exception ex) {}
+		    }
+
+		    return fecha;
+		}
+
+	 
 	 
 }

@@ -1241,7 +1241,7 @@
 	 
 	function consultarFecha(){
 		$.ajax({
-			url  : '/siarex247/cumplimientoFiscal/descargaSAT/recibidos/consultarUltimaFecha.action',
+			url  : '/siarex247/cumplimientoFiscal/boveda/recibidos/consultarFecha.action',
 			type : 'POST', 
 			data : null,
 			dataType : 'json',

@@ -2423,5 +2423,40 @@ public class BovedaAction extends BovedaSupport {
 
 		return f;
 	}
+	
+	public String consultarFecha() {
+	    HttpServletResponse response = ServletActionContext.getResponse();
+	    response.setContentType("application/json; charset=UTF-8");
+
+	    try {
+	        PrintWriter out = response.getWriter();
+	        HttpServletRequest request = ServletActionContext.getRequest();
+
+	        SiarexSession session = ObtenerSession.getSession(request);
+	        if (session == null) throw new Exception("Sesión expirada.");
+
+	        ResultadoConexion rc = getConnection(session.getEsquemaEmpresa());
+	        Connection con = rc.getCon();
+
+	        BovedaBean bean = new BovedaBean();
+	        String fecha = bean.obtenerUltimaFechaTrans(con, rc.getEsquema());
+
+	        JSONObject json = new JSONObject();
+	        json.put("fechaDescarga", fecha);
+
+	        out.print(json.toString());
+	        out.flush();
+	        out.close();
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("consultarFecha()", e);
+	    }
+
+	    // 🔥 Esto evita que Struts devuelva otro JSON adicional
+	    return null;  
+	}
+
+
+
 
 }

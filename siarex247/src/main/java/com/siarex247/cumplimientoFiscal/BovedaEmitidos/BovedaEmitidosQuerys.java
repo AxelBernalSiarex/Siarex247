@@ -29,6 +29,15 @@ public class BovedaEmitidosQuerys {
 	
 	private static String consultaFechaMinima = "select min(FECHA_FACTURA) from BOVEDA_EMITIDOS";
 	
+	private static String fechaEmitidos =
+		    "SELECT MAX(FECHA_TRANS) AS FECHA FROM BOVEDA_EMITIDOS";
+
+
+	public static String getUltimaFechaEmitidos(String esquema) {
+	    return fechaEmitidos.replace("<<esquema>>", esquema);
+	}
+
+	
 	public static String getDetalleBoveda(String esquema) {
 		return detalleBoveda.replaceAll("<<esquema>>", esquema);
 	}

@@ -42,6 +42,14 @@ public class BovedaNominaQuerys {
 	
 	private static String consultaFechaMinima = "select min(FECHA_FACTURA) from BOVEDA_NOMINA";
 	
+	private static String fechaNomina =
+		    "SELECT MAX(FECHA_TRANS) AS FECHA FROM BOVEDA_NOMINA";
+
+		public static String getUltimaFechaNomina(String esquema) {
+		    return fechaNomina.replace("<<esquema>>", esquema);
+		}
+
+	
 	
 	public static String getDetalleBoveda(String esquema) {
 		return detalleBoveda.replaceAll("<<esquema>>", esquema);

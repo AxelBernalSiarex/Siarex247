@@ -1441,6 +1441,44 @@ public class BovedaEmitidosAction extends BovedaEmitidosSupport{
 	public void setReportFile(String reportFile) {
 		this.reportFile = reportFile;
 	}
+	
+	
+	public String consultarFechaEmitidos() {
+	    HttpServletResponse response = ServletActionContext.getResponse();
+	    response.setContentType("application/json; charset=UTF-8");
+
+	    try {
+	        PrintWriter out = response.getWriter();
+	        HttpServletRequest request = ServletActionContext.getRequest();
+
+	        SiarexSession session = ObtenerSession.getSession(request);
+	        if (session == null) return null;
+
+	        ResultadoConexion rc = getConnection(session.getEsquemaEmpresa());
+	        Connection con = rc.getCon();
+
+	        BovedaEmitidosBean bean = new BovedaEmitidosBean();
+	        String fecha = bean.obtenerUltimaFechaEmitidos(con, rc.getEsquema());
+
+	        // NO hay fecha → NO regreses JSON → AJAX lo tomará como vacío
+	        if (fecha == null || fecha.trim().equals("") || fecha.trim().equals("---")) {
+	            return null;  
+	        }
+
+	        JSONObject json = new JSONObject();
+	        json.put("fechaDescarga", fecha);
+
+	        out.print(json.toString());
+	        out.flush();
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("consultarFechaEmitidos()", e);
+	    }
+
+	    return null;  // ← MUY IMPORTANTE
+	}
+
+
 
 
 	

@@ -1579,6 +1579,43 @@ public class BovedaNominaAction extends BovedaNominaSupport{
 		this.inputStream = inputStream;
 	}
 	
+	public String consultarFechaNomina() {
+	    HttpServletResponse response = ServletActionContext.getResponse();
+	    response.setContentType("application/json; charset=UTF-8");
+
+	    try {
+	        PrintWriter out = response.getWriter();
+	        HttpServletRequest request = ServletActionContext.getRequest();
+
+	        SiarexSession session = ObtenerSession.getSession(request);
+	        if (session == null) return null;
+
+	        ResultadoConexion rc = getConnection(session.getEsquemaEmpresa());
+	        Connection con = rc.getCon();
+
+	        BovedaNominaBean bean = new BovedaNominaBean();
+	        String fecha = bean.obtenerUltimaFechaNomina(con, rc.getEsquema());
+
+	        // === SI NO HAY FECHA → no regreses JSON ===
+	        if (fecha == null || fecha.trim().equals("") || fecha.trim().equals("---")) {
+	            return null; // ← evita SyntaxError del lado JS
+	        }
+
+	        JSONObject json = new JSONObject();
+	        json.put("fechaDescarga", fecha);
+
+	        out.print(json.toString());
+	        out.flush();
+
+	        return null; // ← igual que Recibidos y Emitidos
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("consultarFechaNomina()", e);
+	        return null;
+	    }
+	}
+
+	
 	
 
 	

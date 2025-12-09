@@ -1441,4 +1441,28 @@ public class BovedaNominaBean extends FiltrosBovedaNomina {
         return fechaMinima;
     }
 	
+	public String obtenerUltimaFechaNomina(Connection con, String esquema) {
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
+	    String fecha = "";
+
+	    try {
+	        ps = con.prepareStatement(BovedaNominaQuerys.getUltimaFechaNomina(esquema));
+	        rs = ps.executeQuery();
+
+	        if (rs.next()) {
+	            fecha = Utils.noNulo(rs.getString("FECHA"));
+	        }
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("obtenerUltimaFechaNomina()", e);
+	    } finally {
+	        try { if (rs != null) rs.close(); } catch (Exception ex) {}
+	        try { if (ps != null) ps.close(); } catch (Exception ex) {}
+	    }
+
+	    return fecha;
+	}
+
+	
 }
