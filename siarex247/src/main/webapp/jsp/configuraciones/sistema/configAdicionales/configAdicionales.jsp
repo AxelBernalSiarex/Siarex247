@@ -171,7 +171,7 @@
 								</div>
 							  </div>
 
-
+						<!-- 
 							  <div class="mb-2 row">
 								<label class="col-sm-4 col-form-label" for="" id="CONF_SISTEMA_ETQ49">Validar Carta Porte</label>
 								<div class="col-sm-3">
@@ -191,7 +191,12 @@
 											checked="" />
 									</div>
 								</div>
-							  </div>
+							  </div>  = -->
+							  
+							  <!-- Valores ocultos para backend -->
+							<input type="hidden" id="VALIDAR_CP" name="validarCP" value="0" />
+							<input type="hidden" id="PERMITIR_CARTA_PORTE" name="permitirCartaPorte" value="0" />
+														  
 
 
 							<div class="mb-2 row">
