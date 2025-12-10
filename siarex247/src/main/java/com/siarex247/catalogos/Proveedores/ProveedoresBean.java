@@ -1255,13 +1255,16 @@ public class ProveedoresBean {
 	        rs = stmt.executeQuery();
 	       
 	        if (rs.next()) {
-	            form.setPasswordSat(Utils.noNulo(rs.getString("PASSWORD_SAT")));
-	            form.setArchivoCer(Utils.noNulo(rs.getString("ARCHIVO_CER")));
-	            form.setArchivoKey(Utils.noNulo(rs.getString("ARCHIVO_KEY")));
-	            form.setNumeroCertificado(Utils.noNulo(rs.getString("NUMERO_CERTIFICADO")));
 
+	            
+	            form.setPasswordSat(Utils.noNulo(rs.getString(1)));  // PASSWORD_SAT
+	            form.setArchivoCer(Utils.noNulo(rs.getString(2)));   // ARCHIVO_CER
+	            form.setArchivoKey(Utils.noNulo(rs.getString(3)));   // ARCHIVO_KEY
+	            form.setNumeroCertificado(Utils.noNulo(rs.getString(4))); // NUMERO_CERTIFICADO
+
+	            // Tiene certificado si ARCHIVO_CER no está vacío
 	            form.setTieneCertificado(
-	                !Utils.noNulo(rs.getString("ARCHIVO_CER")).isEmpty() ? "S" : "N"
+	                !Utils.noNulo(rs.getString(2)).isEmpty() ? "S" : "N"
 	            );
 	        }
 
@@ -1273,6 +1276,7 @@ public class ProveedoresBean {
 	        try { if (stmt != null) stmt.close(); } catch (Exception ex) {}
 	    }
 	}
+
 
 	
 	public int guardarCertificadosProveedor(

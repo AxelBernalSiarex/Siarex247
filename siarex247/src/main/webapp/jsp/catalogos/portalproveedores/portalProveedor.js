@@ -97,7 +97,14 @@ function cargarCertificadosProveedor() {
         success: function (data) {
 
             $("#TIENE_CERTIFICADO").prop("checked", data.tieneCertificado == "S");
-            $("#numeroCertificado").val("");
+
+            // Campos nuevos: válido desde / válido hasta
+            $("#validoDesde").val(data.validoDesde || "");
+            $("#validoHasta").val(data.validoHasta || "");
+
+            // Evaluar vigencia
+            evaluarVigenciaCertificado(data.validoHasta);
+
         },
 
         error: function (xhr, status, error) {
@@ -106,6 +113,58 @@ function cargarCertificadosProveedor() {
     });
 
 }
+
+
+
+/* ============================================================
+   EVALUAR VIGENCIA DEL CERTIFICADO Y MOSTRAR MENSAJE
+   ============================================================ */
+   function evaluarVigenciaCertificado(fechaVigencia) {
+
+       let divAviso = $("#avisoVencimiento");
+       divAviso.hide().html("");
+
+       if (!fechaVigencia || fechaVigencia.trim() === "") {
+           return;
+       }
+
+       let fechaFin = new Date(fechaVigencia);
+       let hoy = new Date();
+
+       let diffMs = fechaFin - hoy;
+       let diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+       // Si ya venció
+       if (diasRestantes < 0) {
+           divAviso
+               .html("⚠️ <b style='color:#b30000;'>EL CERTIFICADO SAT HA EXPIRADO</b>")
+               .css({
+                   "background": "#ffd6d6",
+                   "border": "1px solid #b30000",
+                   "color": "#b30000"
+               })
+               .show();
+           return;
+       }
+
+       // NUEVO: Solo mostrar si faltan 90 días o menos
+       if (diasRestantes <= 90) {
+
+           divAviso
+               .html(
+                   "⚠️ <b style='color:#b30000;'>FALTAN " + diasRestantes +
+                   " DÍAS PARA QUE SU CERTIFICADO VENZA.</b>"
+               )
+               .css({
+                   "background": "#ffd6d6",
+                   "border": "1px solid #b30000",
+                   "color": "#b30000",
+                   "text-transform": "uppercase"
+               })
+               .show();
+       }
+   }
+
 
 
 

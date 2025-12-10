@@ -31,6 +31,7 @@ import com.siarex247.seguridad.Usuarios.UsuariosBean;
 import com.siarex247.seguridad.Usuarios.UsuariosForm;
 import com.siarex247.session.ObtenerSession;
 import com.siarex247.session.SiarexSession;
+import com.siarex247.utils.CertificadoUtils;
 import com.siarex247.utils.CrtToPem;
 import com.siarex247.utils.EnviaCorreoGrid;
 import com.siarex247.utils.SatKeyToPem;
@@ -1662,22 +1663,73 @@ public class ProveedoresAction extends ProveedoresSupport{
 	        rc = getConnection(session.getEsquemaEmpresa());
 	        con = rc.getCon();
 
+	        // ===== USUARIO ACTUAL =====
 	        UsuariosBean uBean = new UsuariosBean();
 	        UsuariosForm uForm =
 	                uBean.datosUsuario(con, rc.getEsquema(), getUsuario(request));
 
 	        int claveProveedor = Integer.parseInt(uForm.getIdEmpleado().substring(5));
 
+	        // ===== DATOS DEL PROVEEDOR =====
 	        ProveedoresBean pBean = new ProveedoresBean();
 	        ProveedoresForm prov = new ProveedoresForm();
 
 	        pBean.obtenerCertificados(con, rc.getEsquema(), claveProveedor, prov);
 
+	        // =========================================================
+	        //        JSON BASE QUE YA USABAS
+	        // =========================================================
 	        JSONObject json = new JSONObject();
 	        json.put("tieneCertificado", prov.getTieneCertificado());
 	        json.put("numeroCertificado", prov.getNumeroCertificado());
 
-	        out.print(json);
+	        // =========================================================
+	        //   🚀 NUEVO: LEER ARCHIVO .CER Y CALCULAR VENCIMIENTO
+	        // =========================================================
+	        try {
+
+	            if ("S".equalsIgnoreCase(prov.getTieneCertificado())
+	                    && prov.getArchivoCer() != null
+	                    && !prov.getArchivoCer().trim().isEmpty()) {
+
+	                // Ruta real del archivo .CER
+	                String rutaCer =
+	                        UtilsPATH.REPOSITORIO_DOCUMENTOS +
+	                        "PROVEEDORES/" + claveProveedor + "/CERTIFICADOS/" +
+	                        prov.getArchivoCer();
+
+	                File fileCer = new File(rutaCer);
+
+	                if (fileCer.exists()) {
+
+	                    CertificadoUtils.InfoCertificado info =
+	                            CertificadoUtils.leerCertificado(rutaCer);
+
+	                    // Datos del certificado
+	                    json.put("numeroSerie", info.numeroSerie);
+	                    json.put("validoDesde", info.validoDesde);
+	                    json.put("validoHasta", info.validoHasta);
+	                    json.put("diasRestantes", info.diasRestantes);
+	                    json.put("porVencer", info.porVencer); // TRUE si faltan ≤ 90 días
+
+	                } else {
+	                    // Archivo no encontrado → No se puede validar
+	                    json.put("porVencer", false);
+	                }
+
+	            } else {
+	                json.put("porVencer", false);
+	            }
+
+	        } catch (Exception ex) {
+	            Utils.imprimeLog("leerCertificado()", ex);
+	            json.put("porVencer", false);
+	        }
+
+	        // =========================================================
+	        // RESPUESTA FINAL
+	        // =========================================================
+	        out.print(json.toString());
 	        out.flush();
 	        out.close();
 
@@ -1690,6 +1742,7 @@ public class ProveedoresAction extends ProveedoresSupport{
 
 	    return SUCCESS;
 	}
+
 
 	
 	public String guardarCertificadosSAT() throws Exception {
