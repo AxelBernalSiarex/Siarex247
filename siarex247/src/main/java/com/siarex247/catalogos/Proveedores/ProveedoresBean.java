@@ -1242,4 +1242,70 @@ public class ProveedoresBean {
 		}
 		return "N";
 	}
+	
+	public void obtenerCertificados(Connection con, String esquema, int claveProveedor, ProveedoresForm form) {
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+
+	    try {
+	        stmt = con.prepareStatement(ProveedoresQuerys.GET_CERTIFICADO_PROVEEDOR);
+	        stmt.setInt(1, claveProveedor);
+	        logger.info("obtenerCertificados -> " + stmt);
+
+	        rs = stmt.executeQuery();
+	       
+	        if (rs.next()) {
+	            form.setPasswordSat(Utils.noNulo(rs.getString("PASSWORD_SAT")));
+	            form.setArchivoCer(Utils.noNulo(rs.getString("ARCHIVO_CER")));
+	            form.setArchivoKey(Utils.noNulo(rs.getString("ARCHIVO_KEY")));
+	            form.setNumeroCertificado(Utils.noNulo(rs.getString("NUMERO_CERTIFICADO")));
+
+	            form.setTieneCertificado(
+	                !Utils.noNulo(rs.getString("ARCHIVO_CER")).isEmpty() ? "S" : "N"
+	            );
+	        }
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("obtenerCertificados()", e);
+
+	    } finally {
+	        try { if (rs != null) rs.close(); } catch (Exception ex) {}
+	        try { if (stmt != null) stmt.close(); } catch (Exception ex) {}
+	    }
+	}
+
+	
+	public int guardarCertificadosProveedor(
+	        Connection con,
+	        int claveProveedor,
+	        String passwordSat,
+	        String archivoCer,
+	        String archivoKey,
+	        String numeroCertificado
+	) {
+	    PreparedStatement stmt = null;
+
+	    try {
+	        stmt = con.prepareStatement(ProveedoresQuerys.UPDATE_CERTIFICADOS_PROVEEDOR);
+	        stmt.setString(1, passwordSat);
+	        stmt.setString(2, archivoCer);
+	        stmt.setString(3, archivoKey);
+	        stmt.setString(4, numeroCertificado);
+	        stmt.setInt(5, claveProveedor);
+	        
+	        
+	        logger.info("guardarCertificadosProveedor -> " + stmt);
+	        return stmt.executeUpdate();
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("guardarCertificadosProveedor()", e);
+	        return -1;
+
+	    } finally {
+	        try { if (stmt != null) stmt.close(); } catch (Exception ex) {}
+	    }
+	}
+
+
+
 }

@@ -4,6 +4,27 @@
   <artifactId>siarex247</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>war</packaging>
+  
+    <!-- ⭐ AGREGAR DEPENDENCIAS AQUÍ -->
+  <dependencies>
+
+    <!-- BouncyCastle Provider -->
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>1.78.1</version>
+    </dependency>
+
+    <!-- BouncyCastle PKIX (PKCS8, certificados, PEM, etc.) -->
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk18on</artifactId>
+      <version>1.78.1</version>
+    </dependency>
+
+  </dependencies>
+  <!-- ⭐ FIN DE DEPENDENCIAS -->
+  
   <build>
     <resources>
       <resource>

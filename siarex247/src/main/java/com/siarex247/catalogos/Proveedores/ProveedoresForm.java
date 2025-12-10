@@ -137,6 +137,15 @@ public class ProveedoresForm {
 	
 	private UsuariosForm usuariosForm;
 	
+	private String passwordSat;
+	private String archivoCer;
+	private String archivoKey;
+	private String numeroCertificado;
+	private String tieneCertificado; // S/N
+
+
+
+	
 	
 	
 	public String getIdProveedor() {
@@ -784,6 +793,36 @@ public class ProveedoresForm {
 	}
 	public void setEstatusRegistro(String estatusRegistro) {
 		this.estatusRegistro = estatusRegistro;
+	}
+	public String getPasswordSat() {
+		return passwordSat;
+	}
+	public void setPasswordSat(String passwordSat) {
+		this.passwordSat = passwordSat;
+	}
+	public String getArchivoCer() {
+		return archivoCer;
+	}
+	public void setArchivoCer(String archivoCer) {
+		this.archivoCer = archivoCer;
+	}
+	public String getArchivoKey() {
+		return archivoKey;
+	}
+	public void setArchivoKey(String archivoKey) {
+		this.archivoKey = archivoKey;
+	}
+	public String getNumeroCertificado() {
+		return numeroCertificado;
+	}
+	public void setNumeroCertificado(String numeroCertificado) {
+		this.numeroCertificado = numeroCertificado;
+	}
+	public String getTieneCertificado() {
+		return tieneCertificado;
+	}
+	public void setTieneCertificado(String tieneCertificado) {
+		this.tieneCertificado = tieneCertificado;
 	}
 	
  }

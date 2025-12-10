@@ -31,7 +31,9 @@ import com.siarex247.seguridad.Usuarios.UsuariosBean;
 import com.siarex247.seguridad.Usuarios.UsuariosForm;
 import com.siarex247.session.ObtenerSession;
 import com.siarex247.session.SiarexSession;
+import com.siarex247.utils.CrtToPem;
 import com.siarex247.utils.EnviaCorreoGrid;
+import com.siarex247.utils.SatKeyToPem;
 import com.siarex247.utils.Utils;
 import com.siarex247.utils.UtilsFile;
 import com.siarex247.utils.UtilsHTML;
@@ -1531,6 +1533,304 @@ public class ProveedoresAction extends ProveedoresSupport{
 	public void setInputStream(InputStream inputStream) {
 		this.inputStream = inputStream;
 	}
+	
+	
+	public String portalProveedor() throws Exception {
+	    Connection con = null;
+	    ResultadoConexion rc = null;
+
+	    HttpServletRequest request = ServletActionContext.getRequest();
+	    HttpServletResponse response = ServletActionContext.getResponse();
+
+	    try {
+	        SiarexSession session = ObtenerSession.getSession(request);
+	        if ("".equals(session.getEsquemaEmpresa())) {
+	            return Action.LOGIN;
+	        }
+
+	        response.setContentType("application/json; charset=UTF-8");
+	        response.setCharacterEncoding("UTF-8");
+	        PrintWriter out = response.getWriter();
+
+	        // === Obtener conexión primero ===
+	        rc = getConnection(session.getEsquemaEmpresa());
+	        con = rc.getCon();
+
+	        // === Obtener usuario ===
+	        UsuariosBean uBean = new UsuariosBean();
+	        UsuariosForm uForm = uBean.datosUsuario(con, rc.getEsquema(), getUsuario(request));
+
+	        // Solo perfil PROVEEDOR (4)
+	        if (uForm.getIdPerfil() != 4) {
+	            JSONObject error = new JSONObject();
+	            error.put("codError", "401");
+	            error.put("mensaje", "Acceso restringido al portal de proveedores.");
+	            out.print(error);
+	            out.flush();
+	            out.close();
+	            return SUCCESS;
+	        }
+
+	        // === Obtener clave proveedor desde idEmpleado ===
+	        int claveProveedor = Integer.parseInt(uForm.getIdEmpleado().substring(5));
+
+	        ProveedoresBean provBean = new ProveedoresBean();
+	        ProveedoresForm prov = provBean.consultarProveedor(con, rc.getEsquema(), claveProveedor);
+	     // *** ESTA LÍNEA ES LA QUE TE FALTABA ***
+	        provBean.infoProveedoresMail(con, rc.getEsquema(), claveProveedor, prov);
+
+	        JSONObject json = new JSONObject();
+
+	        // ===== DATOS GENERALES =====
+	        json.put("idProveedor", prov.getIdProveedor());
+	        json.put("razonSocial", prov.getRazonSocial());
+	        json.put("rfc", prov.getRfc());
+	        json.put("nombreContacto", prov.getNombreContacto());
+	        json.put("telefono", prov.getTelefono());
+	        json.put("email", prov.getEmail());
+	        json.put("nacionalidad", prov.getTipoProveedor());
+	        json.put("estado", prov.getEstado());
+
+	        // ===== DOMICILIO / ADICIONALES =====
+	        json.put("calle", prov.getCalle());
+	        json.put("colonia", prov.getColonia());
+	        json.put("numeroExt", prov.getNumeroExt());
+	        json.put("numeroInt", prov.getNumeroInt());
+	        json.put("codigoPostal", prov.getCodigoPostal());
+	        json.put("delegacion", prov.getDelegacion());
+	        json.put("ciudad", prov.getCiudad());
+
+	        json.put("confirmarMonto", prov.getTipoConfirmacion());
+	        json.put("anexo24", prov.getAnexo24());
+
+	        // ===== CORREOS (1–5) =====
+	        json.put("email1", prov.getEmail1());
+	        json.put("email2", prov.getEmail2());
+	        json.put("email3", prov.getEmail3());
+	        json.put("email4", prov.getEmail4());
+	        json.put("email5", prov.getEmail5());
+
+	        // ===== SWITCHES (Pagos/OC) EXACTOS COMO EL MODAL =====
+	        json.put("tipoEmail1",  prov.getTipoEmail1());
+	        json.put("tipoEmail2",  prov.getTipoEmail2());
+	        json.put("tipoEmail3",  prov.getTipoEmail3());
+	        json.put("tipoEmail4",  prov.getTipoEmail4());
+	        json.put("tipoEmail5",  prov.getTipoEmail5());
+	        json.put("tipoEmail6",  prov.getTipoEmail6());
+	        json.put("tipoEmail7",  prov.getTipoEmail7());
+	        json.put("tipoEmail8",  prov.getTipoEmail8());
+	        json.put("tipoEmail9",  prov.getTipoEmail9());
+	        json.put("tipoEmail10", prov.getTipoEmail10());
+
+	        // ===== CERTIFICACIONES =====
+	        json.put("tieneSAT",  prov.getTieneSAT());
+	        json.put("tieneIMSS", prov.getTieneIMSS());
+	        json.put("tieneConfidencial", prov.getTieneConfidencial());
+
+	        out.print(json);
+	        out.flush();
+	        out.close();
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("portalProveedor()", e);
+
+	    } finally {
+	        try {
+	            if (con != null) con.close();
+	            con = null;
+	        } catch (Exception ex) {}
+	    }
+
+	    return SUCCESS;
+	}
+	
+	public String obtenerCertificadosSAT() throws Exception {
+	    Connection con = null;
+	    ResultadoConexion rc = null;
+
+	    HttpServletRequest request = ServletActionContext.getRequest();
+	    HttpServletResponse response = ServletActionContext.getResponse();
+
+	    try {
+	        SiarexSession session = ObtenerSession.getSession(request);
+	        if (session.getEsquemaEmpresa().isEmpty())
+	            return Action.LOGIN;
+
+	        response.setContentType("application/json; charset=UTF-8");
+	        PrintWriter out = response.getWriter();
+
+	        rc = getConnection(session.getEsquemaEmpresa());
+	        con = rc.getCon();
+
+	        UsuariosBean uBean = new UsuariosBean();
+	        UsuariosForm uForm =
+	                uBean.datosUsuario(con, rc.getEsquema(), getUsuario(request));
+
+	        int claveProveedor = Integer.parseInt(uForm.getIdEmpleado().substring(5));
+
+	        ProveedoresBean pBean = new ProveedoresBean();
+	        ProveedoresForm prov = new ProveedoresForm();
+
+	        pBean.obtenerCertificados(con, rc.getEsquema(), claveProveedor, prov);
+
+	        JSONObject json = new JSONObject();
+	        json.put("tieneCertificado", prov.getTieneCertificado());
+	        json.put("numeroCertificado", prov.getNumeroCertificado());
+
+	        out.print(json);
+	        out.flush();
+	        out.close();
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("obtenerCertificadosSAT()", e);
+
+	    } finally {
+	        try { if (con != null) con.close(); } catch (Exception ex) {}
+	    }
+
+	    return SUCCESS;
+	}
+
+	
+	public String guardarCertificadosSAT() throws Exception {
+	    Connection con = null;
+	    ResultadoConexion rc = null;
+
+	    HttpServletRequest request = ServletActionContext.getRequest();
+	    HttpServletResponse response = ServletActionContext.getResponse();
+
+	    try {
+	        SiarexSession session = ObtenerSession.getSession(request);
+	        if (session.getEsquemaEmpresa().isEmpty())
+	            return Action.LOGIN;
+
+	        response.setContentType("application/json; charset=UTF-8");
+	        PrintWriter out = response.getWriter();
+
+	        rc = getConnection(session.getEsquemaEmpresa());
+	        con = rc.getCon();
+
+	        // === USUARIO LOGEADO ===
+	        UsuariosBean uBean = new UsuariosBean();
+	        UsuariosForm uForm =
+	                uBean.datosUsuario(con, rc.getEsquema(), getUsuario(request));
+
+	        int claveProveedor = Integer.parseInt(uForm.getIdEmpleado().substring(5));
+
+	        // === ARCHIVOS SUBIDOS ===
+	        Part cerPart = request.getPart("fileCER");
+	        Part keyPart = request.getPart("llavePrivada");
+
+	        File fCer = UtilsFile.getFileFromPart(cerPart);
+	        File fKey = UtilsFile.getFileFromPart(keyPart);
+
+	        if (fCer == null || fKey == null) {
+	            out.print("{\"codError\":\"001\", \"mensaje\":\"Debe subir ambos archivos (.cer y .key)\"}");
+	            out.flush();
+	            return null;
+	        }
+
+	        // === RUTA REPOSITORIO ===
+	        String ruta = UtilsPATH.REPOSITORIO_DOCUMENTOS +
+	                      "PROVEEDORES/" + claveProveedor + "/CERTIFICADOS/";
+
+	        File carpeta = new File(ruta);
+	        if (!carpeta.exists()) carpeta.mkdirs();
+
+	        // === RFC DEL PROVEEDOR (para nombre de archivo) ===
+	        ProveedoresBean provBean = new ProveedoresBean();
+	        ProveedoresForm provForm = provBean.consultarProveedor(con, rc.getEsquema(), claveProveedor);
+	        String rfcProveedor = provForm.getRfc().toUpperCase();
+
+	        // === ARCHIVOS DESTINO ===
+	        File destCer = new File(ruta + rfcProveedor + "_cer.cer");
+	        File destKey = new File(ruta + rfcProveedor + "_key.key");
+	        File destPemCer = new File(ruta + rfcProveedor + "_cer.pem");
+	        File destPemKey = new File(ruta + rfcProveedor + "_key.pem");
+
+	        // === LOGS ===
+	        logger.info("[CERTIFICADOS][RUTA] " + ruta);
+	        logger.info("[CERT][CER] " + destCer.getAbsolutePath());
+	        logger.info("[CERT][KEY] " + destKey.getAbsolutePath());
+	        logger.info("[CERT][PEM_CER] " + destPemCer.getAbsolutePath());
+	        logger.info("[CERT][PEM_KEY] " + destPemKey.getAbsolutePath());
+
+	        // === COPIAR ARCHIVOS ===
+	        UtilsFile.moveFileDirectory(fCer, destCer, true, false, true, true);
+	        UtilsFile.moveFileDirectory(fKey, destKey, true, false, true, true);
+
+	        // =====================================================
+	        //  ✔ CONVERTIR .CER → .PEM
+	        // =====================================================
+	        try {
+	            CrtToPem.convertCertificateToPem(destCer, destPemCer);
+	        } catch (Exception ex) {
+	            Utils.imprimeLog("Error al convertir CER a PEM", ex);
+	        }
+
+	        // =====================================================
+	        //  ✔ CONVERTIR .KEY → .PEM  (USANDO TU CLASE SatKeyToPem)
+	        // =====================================================
+	        try {
+	            SatKeyToPem.convertirKeytoPem(
+	                    destKey.getAbsolutePath(),
+	                    getPwdSat(),
+	                    destPemKey.getAbsolutePath()
+	            );
+	            logger.info("[KEY→PEM] Conversión OK");
+	        } catch (Exception ex) {
+
+	            logger.error("❌ Error: La contraseña del archivo .KEY es incorrecta");
+
+	            JSONObject json = new JSONObject();
+	            json.put("codError", "002");
+	            json.put("mensaje", "La contraseña del archivo .KEY es incorrecta. Verifique e intente nuevamente.");
+
+	            response.getWriter().print(json.toString());
+	            return null;  // ← DETIENE EL PROCESO
+	        }
+
+
+	        // === GUARDAR EN BD ===
+	        ProveedoresBean bean = new ProveedoresBean();
+	        bean.guardarCertificadosProveedor(
+	                con,
+	                claveProveedor,
+	                getPwdSat(),
+	                destCer.getName(),
+	                destKey.getName(),
+	                getNumeroCertificado()
+	        );
+
+	        // === RESPUESTA OK ===
+	        JSONObject json = new JSONObject();
+	        json.put("codError", "000");
+	        json.put("mensaje", "Certificados guardados correctamente");
+	        out.print(json.toString());
+	        out.flush();
+	        return null;
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("guardarCertificadosSAT()", e);
+
+	        try {
+	            JSONObject json = new JSONObject();
+	            json.put("codError", "999");
+	            json.put("mensaje", e.getMessage());
+	            response.getWriter().print(json.toString());
+	        } catch (Exception ignore) {}
+
+	        return null;
+	    } finally {
+	        try { if (con != null) con.close(); } catch (Exception ex) {}
+	    }
+	}
+
+
+
+
+
+
 
 	 
 	 

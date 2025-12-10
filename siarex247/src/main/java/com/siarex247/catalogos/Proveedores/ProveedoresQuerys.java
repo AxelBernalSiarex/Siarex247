@@ -28,6 +28,16 @@ public class ProveedoresQuerys {
 	
 	private static String queryProveedoresTipo = "select CLAVE_PROVEEDOR, RFC, RAZON_SOCIAL, NOTIFICAR_ORDEN, EMAIL from PROVEEDORES where  TIPO_PROVEEDOR in (?,?);";
 	
+	
+	public static String GET_CERTIFICADO_PROVEEDOR =
+		    "SELECT PASSWORD_SAT, ARCHIVO_CER, ARCHIVO_KEY, NUMERO_CERTIFICADO " +
+		    "FROM PROVEEDORES WHERE CLAVE_PROVEEDOR = ?";
+
+	public static String UPDATE_CERTIFICADOS_PROVEEDOR =
+		    "UPDATE PROVEEDORES SET PASSWORD_SAT = ?, ARCHIVO_CER = ?, ARCHIVO_KEY = ?, NUMERO_CERTIFICADO = ? " +
+		    "WHERE CLAVE_PROVEEDOR = ?";
+
+	
 	public static String getQueryDetalleProveedor(String esquema) {
 		return detalleProveedor.replaceAll("<<esquema>>", esquema);
 	}

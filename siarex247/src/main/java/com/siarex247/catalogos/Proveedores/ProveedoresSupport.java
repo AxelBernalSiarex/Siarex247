@@ -144,6 +144,9 @@ public class ProveedoresSupport extends ActionDB {
 	
 	private String bandTareas;
 	
+	private String pwdSat;
+	private String numeroCertificado;
+	
 	public int getClaveRegistro() {
 		return claveRegistro;
 	}
@@ -903,6 +906,24 @@ public class ProveedoresSupport extends ActionDB {
 	public void setBandTareas(String bandTareas) {
 		this.bandTareas = bandTareas;
 	}
+	
+	public String getPwdSat() {
+	    return pwdSat;
+	}
+
+		@StrutsParameter
+		public void setPwdSat(String pwdSat) {
+		    this.pwdSat = pwdSat;
+		}
+		
+		public String getNumeroCertificado() {
+		    return numeroCertificado;
+		}
+		
+		@StrutsParameter
+		public void setNumeroCertificado(String numeroCertificado) {
+		    this.numeroCertificado = numeroCertificado;
+		}
 	
 
 	
