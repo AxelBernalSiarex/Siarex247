@@ -1,0 +1,150 @@
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+       "https://struts.apache.org/dtds/struts-6.0.dtd">
+
+<struts>
+
+
+	  <package name="procesosLayoutOrdenes" namespace="/procesos/layout/ordenesCompra" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.layOut.OrdenesCompra.OrdenesCompraAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+    <package name="procesosLayoutRecibos" namespace="/procesos/layout/recibos" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.layOut.ContraRecibos.ContraRecibosAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+     <package name="procesosLayoutPagos" namespace="/procesos/layout/pagos" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.layOut.PagosOrdenesCompra.PagosOrdenesCompraAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="procesosEliminar" namespace="/procesos/layout/eliminarOrdenes" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.layOut.EliminarOrdenes.EliminarOrdenesAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="procesosEliminar" namespace="/procesos/layout/importarProveedores" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.layOut.ImportarProveedores.ImportarProveedoresAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    
+    <package name="procesosFormatos" namespace="/procesos/formatos" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.layOut.Formatos.FormatosAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+    <package name="procesosTareas" namespace="/procesos/tareas" extends="struts-default" strict-method-invocation="false">
+  		
+	   <result-types>
+	   		<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
+	   	</result-types>
+	   	<interceptors>	
+			<interceptor name="setHibernateSession" class="org.apache.struts2.json.JSONInterceptor"></interceptor>
+	         <interceptor-stack name="newStack">
+	         	<interceptor-ref name="setHibernateSession"/>
+				<interceptor-ref name="defaultStack" />
+	         </interceptor-stack>
+		  </interceptors>	
+		  
+        <action name="*" class="com.siarex247.layOut.Tareas.TareasAction" method="{1}">
+            <interceptor-ref name="newStack"/>
+            <result type="json" />
+        </action>
+        
+    </package>
+    
+</struts>
