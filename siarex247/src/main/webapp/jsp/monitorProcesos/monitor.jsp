@@ -249,6 +249,18 @@
 
   }
   
+  function iniciarLeerCuentaCorreo(){
+      if (getClase('btnProc15') == 'GREEN'){
+    	  document.getElementById('btnProc15').className = 'RED';
+          window.open('terminarLeerCuentaCorreo.jsp','ocultoFrame');
+      }else{
+    	  document.getElementById('btnProc15').className = 'GREEN';
+          window.open('iniciarLeerCuentaCorreo.jsp','ocultoFrame');
+          
+      }
+
+  }
+  
   function muestraMensaje(mensaje){
 	  document.getElementById('txtMensaje').value = mensaje;
   }
@@ -270,6 +282,7 @@
 		  var bandBtn12 = '<%=mapaProceso.get("PROC_12")%>';
 		  var bandBtn13 = '<%=mapaProceso.get("PROC_13")%>';
 		  var bandBtn14 = '<%=mapaProceso.get("PROC_14")%>';
+		  var bandBtn14 = '<%=mapaProceso.get("PROC_15")%>';
 		  
 		  if (btnProc1 == 'S'){
 			  document.getElementById('btnProc1').className = 'RED';			  
@@ -342,6 +355,11 @@
 			  document.getElementById('btnProc14').className = 'RED';			  
 		  }else{
 			  document.getElementById('btnProc14').className = 'GREEN';
+		  }
+		  if (bandBtn15 == 'S'){
+			  document.getElementById('btnProc15').className = 'RED';			  
+		  }else{
+			  document.getElementById('btnProc15').className = 'GREEN';
 		  }
 		  
 
@@ -439,8 +457,9 @@
           <td width="25%" align="center">
              <input type="button" name="btnProc13" id="btnProc13" value="ACTUALIZAR CANCELADOS SAT" onclick="iniciarActualizarCancelados();"  class="GREEN">
           </td>
-          <td align="center">&nbsp;
-              
+          
+          <td width="25%" align="center">
+             <input type="button" name="btnProc15" id="btnProc15" value="LEER CUENTAS CORREO" onclick="iniciarLeerCuentaCorreo();"  class="GREEN">
           </td>
           
        </tr> 
