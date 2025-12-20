@@ -531,4 +531,46 @@ public class AccesoBean {
 		}
 		return empresasForm;
 	}
+	
+	public EmpresasForm consultaEmpresaPorNombreLargo(String nombreLargo) {
+
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    EmpresasForm empresa = null;
+
+	    ResultadoConexion rc = null;
+	    ConexionDB connPool = new ConexionDB();
+	    Connection con = null;
+
+	    try {
+	        rc = connPool.getConnectionSiarex();
+	        con = rc.getCon();
+
+	        stmt = con.prepareStatement(
+	            AccesoQuerys.getConsultaEmpresaPorNombreLargo()
+	        );
+	        stmt.setString(1, nombreLargo);
+	        
+	        logger.info("consultaEmpresaPorNombreLargo -> "+stmt);
+
+	        rs = stmt.executeQuery();
+
+	        if (rs.next()) {
+	            empresa = new EmpresasForm();
+	            empresa.setClaveEmpresa(rs.getInt("CLAVE_EMPRESA"));
+	            empresa.setNombreLargo(rs.getString("NOMBRE_LARGO"));
+	            empresa.setEstatus(rs.getString("ESTATUS"));
+	        }
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("consultaEmpresaPorNombreLargo", e);
+	    } finally {
+	        try { if (rs != null) rs.close(); } catch (Exception e) {}
+	        try { if (stmt != null) stmt.close(); } catch (Exception e) {}
+	        try { if (con != null) con.close(); } catch (Exception e) {}
+	    }
+
+	    return empresa;
+	}
+
 }

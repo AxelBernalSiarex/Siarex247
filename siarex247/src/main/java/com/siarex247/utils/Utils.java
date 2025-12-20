@@ -213,7 +213,7 @@ public class Utils {
 		Writer result = new StringWriter();
 		PrintWriter printWriter = new PrintWriter(result);
 		e.printStackTrace(printWriter);
-		logger.info(msg + " : "+result.toString());
+	//	logger.info(msg + " : "+result.toString());
 	}
 
 	

@@ -27,11 +27,12 @@ public class UtilsPATH {
 	public static final String NUMERO_CONTRATO_PRODIGIA = getRuta_SIAREX("NCP");
 	public static final String AUTHORIZATION_CUENTA_PRODIGIA = getRuta_SIAREX("ACP");
 	// public static final String RUTA_CERTIFICADOS_SAT = getRuta_SIAREX("RSA");
-	public static final String HOST_CORREO_PROCESO = getRuta_SIAREX("PMS");
+	public static final String HOST_CORREO_PROCESO = getRuta_SIAREX("PMS");    //HOST
 	public static final String API_KEY_TIMBRADO_DESCARGA = getRuta_SIAREX("APT");
 	public static final String ENDPOINT_TIMBRADO_EXPRESSS = getRuta_SIAREX("TEP");
 	public static final String API_KEY_TIMBRADO_VALIDAR = getRuta_SIAREX("APV");
 	public static final String REPOSITORIO_RAIZ_DOCUMENTOS = getRuta_SIAREX("RRA");
+	public static final String CORREO_NO_DESEADO = getRuta_SIAREX("COH");
 	
 	
 	

@@ -17,6 +17,14 @@ public class AccesoQuerys {
 	
 	private static String queryRevisaMon =  "select APAGADO from PROCESO where CLAVE = ?";
 	
+	private static String consultaEmpresaPorNombreLargo =
+		    "SELECT CLAVE_EMPRESA, NOMBRE_LARGO, ESTATUS " +
+		    "FROM EMPRESAS " +
+		    "WHERE LOWER(TRIM(NOMBRE_LARGO)) = LOWER(TRIM(?)) " +
+		    "AND ESTATUS = 'A'";
+
+
+	
 	
 	
 	public static String getConsultaAcceso(String esquema) {
@@ -62,6 +70,17 @@ public class AccesoQuerys {
 	public static String getConsultaEmpresaRFC(String esquema) {
 		return consultaEmpresaRFC.replaceAll("<<esquema>>", esquema);
 	}
+	
+
+
+	public static String getConsultaEmpresaPorNombreLargo() {
+		return consultaEmpresaPorNombreLargo;
+	}
+
+	public static void setConsultaEmpresaPorNombreLargo(String consultaEmpresaPorNombreLargo) {
+		AccesoQuerys.consultaEmpresaPorNombreLargo = consultaEmpresaPorNombreLargo;
+	}
+
 	
 	
 	

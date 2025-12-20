@@ -282,7 +282,7 @@
 		  var bandBtn12 = '<%=mapaProceso.get("PROC_12")%>';
 		  var bandBtn13 = '<%=mapaProceso.get("PROC_13")%>';
 		  var bandBtn14 = '<%=mapaProceso.get("PROC_14")%>';
-		  var bandBtn14 = '<%=mapaProceso.get("PROC_15")%>';
+		  var bandBtn15 = '<%=mapaProceso.get("PROC_15")%>';
 		  
 		  if (btnProc1 == 'S'){
 			  document.getElementById('btnProc1').className = 'RED';			  
