@@ -24,7 +24,6 @@ public class AribaHtmParser {
         }
 
         // ================= DESDE / EMPRESA (NOMBRE COMPLETO RAW) =================
-        // Extrae exactamente lo que viene en el HTML (Ej: "HP INC. HP Inc US71 IC Plant")
         String nombreEmpresa = null;
 
         // 1) Prioridad: Clase CSS de Ariba (Bill To / From)
@@ -35,7 +34,7 @@ public class AribaHtmParser {
 
         // 2) Fallback: Buscar por etiqueta "From/Desde"
         if (nombreEmpresa == null || nombreEmpresa.isEmpty()) {
-            Element desdeLabel = doc.selectFirst("td:contains(From:), td:contains(Desde:)");
+            Element desdeLabel = doc.selectFirst("td:contains(From:), td:contains(Desde:), td:contains(Desde:)");
             if (desdeLabel != null) {
                 Element parent = desdeLabel.parent();
                 if (parent != null) {
@@ -54,22 +53,25 @@ public class AribaHtmParser {
                     nombreEmpresa = text.split("sent by ")[1].split(" AN")[0].trim();
                 } else if (text.contains("enviado por ")) {
                     nombreEmpresa = text.split("enviado por ")[1].split(" AN")[0].trim();
+                } else if (text.contains("ha sido enviado por ")) {
+                    // Variante en español
+                    try {
+                        nombreEmpresa = text.split("ha sido enviado por ")[1].split(" y ")[0].trim();
+                    } catch (Exception ignore) {}
                 }
             }
         }
 
         if (nombreEmpresa != null && !nombreEmpresa.isEmpty()) {
-            data.setDesde(nombreEmpresa.replaceAll("\\s+", " "));
+            data.setDesde(nombreEmpresa.replaceAll("\\s+", " ").trim());
             data.setEmpresa(data.getDesde());
         }
 
-        // ================= PARA (Receptor / Contacto) - FIX DEFINITIVO =================
-        // En tu HTML real, el "To:" está en:
-        // td.po-INSSAddr-To-label  -> luego td.po-INSSAddr-addr-details con <b>Nombre</b>
+        // ================= PARA (Receptor / Contacto) =================
         String para = null;
 
-        // 1) Ubica el bloque "To:" y toma el nombre dentro de esa misma tabla
-        Element toTd = doc.selectFirst("td.po-INSSAddr-To-label"); // contiene <b>To:&nbsp;</b>
+        // 1) Ubica el bloque "Para:/To:" y toma el nombre dentro de esa misma tabla
+        Element toTd = doc.selectFirst("td.po-INSSAddr-To-label"); // contiene <b>Para:&nbsp;</b> o <b>To:&nbsp;</b>
         if (toTd != null) {
             Element toTable = toTd.closest("table"); // WrapTableOverflowContents
             if (toTable != null) {
@@ -90,13 +92,12 @@ public class AribaHtmParser {
 
         data.setPara(para);
 
-        // ✅ LOGS ya con valores seteados
-        logger.info("HTM PARSED → DESDE: " + data.getDesde());
-        logger.info("HTM PARSED → PARA : " + data.getPara());
-
         // ================= TAX ID =================
-        data.setTaxId(extraerPorLabel(doc, "Customer VAT/Tax ID:"));
-        if (data.getTaxId() == null) data.setTaxId(extraerPorLabel(doc, "RFC del cliente:"));
+        data.setTaxId(extraerPorLabelMulti(doc,
+                "Customer VAT/Tax ID:",
+                "RFC del cliente:",
+                "RFC:"
+        ));
 
         // ================= MONEDA Y MONTO =================
         Element monto = doc.selectFirst(".po-INSPON-std-money");
@@ -106,7 +107,7 @@ public class AribaHtmParser {
             if (txt.contains("MXN")) data.setMoneda("MXN");
             else if (txt.contains("USD")) data.setMoneda("USD");
 
-            // OJO: "800,000.00" trae coma, esto lo normaliza
+            // "66,500.00" trae coma -> se elimina
             String limpio = txt.replaceAll("[^0-9.,]", "");
             limpio = limpio.replace(",", "");
 
@@ -115,41 +116,89 @@ public class AribaHtmParser {
             }
         }
 
-        // ================= OTROS DATOS =================
-        data.setClasificacionDominio(extraerPorLabel(doc, "Classification Domain:"));
-        data.setClasificacionCodigo(extraerPorLabel(doc, "Classification Code:"));
+        // ================= CLASIFICACIÓN (EN/ES) =================
+        // 1) Inglés (como HP)
+        String dom = extraerPorLabelMulti(doc,
+                "Classification Domain:",
+                "Dominio de la clasificación:",
+                "Dominio de la clasificacion:"
+        );
+        String cod = extraerPorLabelMulti(doc,
+                "Classification Code:",
+                "Código de clasificación:",
+                "Codigo de clasificacion:"
+        );
 
-        // Email (en este HTML el email está en un td con "Email:" dentro del bloque To)
-        String email = extraerPorLabel(doc, "Email:");
-        if (email == null) {
-            // Fallback alterno (por si el HTML cambia)
-            Element emailElement = doc.selectFirst("span:contains(Email:) + span");
-            email = (emailElement != null) ? emailElement.text().trim() : null;
+        data.setClasificacionDominio(dom);
+        data.setClasificacionCodigo(cod);
+
+        // ================= EMAIL (EN/ES) =================
+        String email = extraerPorLabelMulti(doc,
+                "Email:",
+                "Correo electrónico:",
+                "Correo electronico:"
+        );
+
+        // Fallback para el bloque "Para:" (como en el HTM de Toyota)
+        if (email == null || email.trim().isEmpty()) {
+            Element emailTd = doc.selectFirst("td.po-INSSAddr-addr-details:matchesOwn((?i)Correo\\s+electr[oó]nico:.*)");
+            if (emailTd != null) {
+                String t = emailTd.text().trim();
+                int idx = t.indexOf(":");
+                if (idx >= 0 && idx + 1 < t.length()) {
+                    email = t.substring(idx + 1).trim();
+                }
+            }
         }
-        data.setEmailDestino(email);
+
+        data.setEmailDestino((email != null && !email.trim().isEmpty()) ? email.trim() : null);
+
+        // ✅ LOGS ya con valores seteados
+        logger.info("HTM PARSED → DESDE: " + data.getDesde());
+        logger.info("HTM PARSED → PARA : " + data.getPara());
+        logger.info("HTM PARSED → CLASIF_DOM: " + data.getClasificacionDominio());
+        logger.info("HTM PARSED → CLASIF_COD: " + data.getClasificacionCodigo());
 
         return data;
     }
 
     // ================= MÉTODOS AUXILIARES =================
 
-    private String extraerPorTextoVisual(Document doc, String etiqueta) {
-        Element el = doc.selectFirst(
-                "td:contains(" + etiqueta + "), b:contains(" + etiqueta + "), span:contains(" + etiqueta + ")"
-        );
-        if (el != null) {
-            Element sibling = el.nextElementSibling();
-            if (sibling != null) return sibling.text().trim();
-            return el.text().replace(etiqueta, "").trim();
+    /**
+     * Busca un valor en tabla tipo:
+     * td.base-ncd-label-top:contains(LABEL) + td
+     * y soporta múltiples labels (EN/ES).
+     */
+    private String extraerPorLabelMulti(Document doc, String... labels) {
+        if (labels == null) return null;
+
+        for (String label : labels) {
+            String val = extraerPorLabel(doc, label);
+            if (val != null && !val.trim().isEmpty()) {
+                return val.trim();
+            }
         }
         return null;
     }
 
+    /**
+     * Extrae texto de "LABEL" en:
+     * td.base-ncd-label-top:contains(LABEL) + td
+     * fallback: td:contains(LABEL) + td
+     */
     private String extraerPorLabel(Document doc, String label) {
+        if (doc == null || label == null || label.trim().isEmpty()) return null;
+
+        // 1) Caso típico en "Otra información"
         Element td = doc.selectFirst("td.base-ncd-label-top:contains(" + label + ") + td");
         if (td == null) {
+            // 2) Fallback general (por si la etiqueta cambia de clase)
             td = doc.selectFirst("td:contains(" + label + ") + td");
         }
-        return td != null ? td.text().trim() : null;
+
+        if (td == null) return null;
+
+        String txt = td.text();
+        return (txt != null) ? txt.trim() : null;
     }
 }

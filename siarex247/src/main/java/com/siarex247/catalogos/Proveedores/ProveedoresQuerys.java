@@ -35,10 +35,11 @@ public class ProveedoresQuerys {
 
 	// VALIDAR PROVEEDOR POR RAZON SOCIAL (HTML)
 	private static String infoProveedorXRazonSocial =
-	    "SELECT CLAVE_PROVEEDOR, RAZON_SOCIAL, RFC " +
-	    "FROM PROVEEDORES " +
-	    "WHERE UPPER(TRIM(RAZON_SOCIAL)) = UPPER(TRIM(?)) " +
-	    "AND ESTATUS_REGISTRO = 'A'";
+		    "SELECT CLAVE_PROVEEDOR, RAZON_SOCIAL, RFC " +
+		    "FROM PROVEEDORES " +
+		    "WHERE TRIM(RAZON_SOCIAL) = TRIM(?) " +
+		    "AND ESTATUS_REGISTRO = 'A'";
+
 
 	
 	public static String getQueryDetalleProveedor(String esquema) {

@@ -20,8 +20,9 @@ public class AccesoQuerys {
 	private static String consultaEmpresaPorNombreLargo =
 		    "SELECT CLAVE_EMPRESA, NOMBRE_LARGO, ESTATUS " +
 		    "FROM EMPRESAS " +
-		    "WHERE LOWER(TRIM(NOMBRE_LARGO)) = LOWER(TRIM(?)) " +
+		    "WHERE TRIM(NOMBRE_LARGO) = TRIM(?) " +
 		    "AND ESTATUS = 'A'";
+
 
 
 	
