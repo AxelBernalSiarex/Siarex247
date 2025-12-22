@@ -1,11 +1,8 @@
 package com.siarex247.leerCuenta;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.math.BigDecimal;
 import java.util.Properties;
-import java.util.Set;
 
 import javax.mail.BodyPart;
 import javax.mail.Flags;
@@ -31,6 +28,16 @@ import com.siarex247.utils.UtilsPATH;
 public class CorreoReader {
 
     private static final Logger logger = Logger.getLogger("siarex247");
+
+    // ================= CÓDIGOS DE ERROR =================
+    private static final String E001_ORDEN_VACIA        = "E001"; // 1) Orden vacía
+    private static final String E002_MONEDA_INVALIDA    = "E002"; // 2) Moneda inválida
+    private static final String E003_EMPRESA_NO_EXISTE  = "E003"; // 3) Empresa (DESDE) no existe en EMPRESAS
+    private static final String E004_PROV_NO_EXISTE     = "E004"; // 4) Proveedor (PARA) no existe en PROVEEDORES
+    private static final String E005_IMPORTE_INVALIDO   = "E005"; // 5) Importe <= 0 / nulo
+    private static final String E006_CLASIF_VACIA       = "E006"; // 6) Clasificación vacía
+    private static final String E999_ERROR_GENERAL      = "E999"; // Cualquier otro error inesperado
+    // ====================================================
 
     /**
      * Lee la cuenta de correo de una empresa y procesa adjuntos HTM
@@ -93,10 +100,16 @@ public class CorreoReader {
 
                     procesarMensaje(msg, empresaSesion);
 
+                    // ✅ SOLO si no truena, se marca leído
                     msg.setFlag(Flags.Flag.SEEN, true);
                     logger.info("Correo procesado y marcado como LEÍDO");
 
+                } catch (ValidacionHtmException vex) {
+                    // ❌ No se marca como leído (la bitácora ya se insertó dentro de procesarMensaje)
+                    logger.error("❌ Validación HTM falló [" + vex.getCodigoError() + "]: " + vex.getMessage(), vex);
                 } catch (Exception e) {
+                    // ❌ No se marca como leído (si quieres también bitacorizar aquí, se puede, pero
+                    // normalmente aquí ya se bitacorizó por attachment dentro de procesarMensaje)
                     logger.error("❌ Error procesando mensaje, NO se marca como leído", e);
                 }
             }
@@ -116,14 +129,17 @@ public class CorreoReader {
 
     /**
      * Procesa un mensaje y guarda adjuntos HTM
+     * IMPORTANTE: Aquí se integra BITÁCORA si falla.
      */
     private void procesarMensaje(Message msg, EmpresasForm empresaSesion) throws Exception {
 
-        if (!msg.getContentType().toLowerCase().contains("multipart")) return;
+        if (msg.getContentType() == null || !msg.getContentType().toLowerCase().contains("multipart")) return;
 
         String correoDe = ((InternetAddress) msg.getFrom()[0]).getAddress();
+        String asunto = msg.getSubject();
+
         logger.info("Procesando correo de: " + correoDe);
-        logger.info("Asunto: " + msg.getSubject());
+        logger.info("Asunto: " + asunto);
 
         Multipart mp = (Multipart) msg.getContent();
 
@@ -149,133 +165,256 @@ public class CorreoReader {
 
             logger.info("HTM guardado correctamente: " + archivo.getAbsolutePath());
 
-            // ================= PARSE HTM =================
-            AribaHtmParser parser = new AribaHtmParser();
-            OrdenCompraHtmData data = parser.parse(archivo);
+            OrdenCompraHtmData data = null;
 
-            // LOG DEPURACIÓN (Verificamos qué extrajo el parser)
-            logger.info("--- DATOS EXTRAÍDOS DEL PARSER ---");
-            logger.info("DESDE (Proveedor): " + data.getDesde());
-            logger.info("PARA  (Destinatario/Empleado): " + data.getPara());
-            logger.info("----------------------------------");
+            try {
+                // ================= PARSE HTM =================
+                AribaHtmParser parser = new AribaHtmParser();
+                data = parser.parse(archivo);
 
-            // ================= VALIDACIONES OBLIGATORIAS =================
-            validarNumeroOrden(data);
-            validarMoneda(data);
-            validarImporte(data);
-            validarClasificacion(data);
+                // LOG DEPURACIÓN (Verificamos qué extrajo el parser)
+                logger.info("--- DATOS EXTRAÍDOS DEL PARSER ---");
+                logger.info("DESDE (Proveedor): " + data.getDesde());
+                logger.info("PARA  (Destinatario/Empleado): " + data.getPara());
+                logger.info("----------------------------------");
 
-            // ================= VALIDACIÓN EMPRESA (EMISOR) =================
-            // Validamos que el DESDE (HP) exista como empresa
-            validarRazonSocialHTM(data);
+                // ================= VALIDACIONES (CON CÓDIGO) =================
+                validarNumeroOrden(data);
+                validarMoneda(data);
+                validarImporte(data);
+                validarClasificacion(data);
 
-            // ================= VALIDACIÓN PROVEEDOR (EMISOR) =================
-            // Validamos que el DESDE (HP) exista como proveedor
-            validarProveedorEmisorFlexible(data, empresaSesion);
+                // 3) Validar EMPRESA en EMPRESAS (DESDE)
+                validarRazonSocialHTM(data);
 
+                // 4) Validar PROVEEDOR en PROVEEDORES (PARA) en contrare_<esquema>
+                validarProveedorPara(data, empresaSesion);
 
-            // ================= LOG FINAL =================
-            logDatos(data);
+                // ================= LOG FINAL =================
+                logDatos(data);
+
+            } catch (ValidacionHtmException vex) {
+
+                // --------- BITÁCORA (ERROR DE VALIDACIÓN) ----------
+                String numOrden = obtenerNumOrdenSeguro(data, fileName);
+                insertarBitacoraSeguro(
+                    empresaSesion,
+                    numOrden,
+                    vex.getCodigoError(),
+                    vex.getMessage(),
+                    correoDe,
+                    asunto,
+                    archivo
+                );
+                // ---------------------------------------------------
+
+                logger.error("❌ HTM inválido [" + vex.getCodigoError() + "] numOrden=" + numOrden
+                        + " esquema=" + empresaSesion.getEsquema()
+                        + " msg=" + vex.getMessage());
+
+                // Propaga para que NO se marque como leído
+                throw vex;
+
+            } catch (Exception ex) {
+
+                // --------- BITÁCORA (ERROR GENERAL) ----------
+                String numOrden = obtenerNumOrdenSeguro(data, fileName);
+                String desc = (ex.getMessage() != null && !ex.getMessage().trim().isEmpty())
+                        ? ex.getMessage()
+                        : "Error general procesando HTM";
+
+                insertarBitacoraSeguro(
+                    empresaSesion,
+                    numOrden,
+                    E999_ERROR_GENERAL,
+                    desc,
+                    correoDe,
+                    asunto,
+                    archivo
+                );
+                // --------------------------------------------
+
+                logger.error("❌ Error general HTM [" + E999_ERROR_GENERAL + "] numOrden=" + numOrden
+                        + " esquema=" + empresaSesion.getEsquema()
+                        + " err=" + desc, ex);
+
+                throw new ValidacionHtmException(E999_ERROR_GENERAL, "Error general procesando HTM: " + desc, ex);
+            }
         }
     }
 
-    /**
-     * Valida que la razón social (DESDE) del HTM exista en EMPRESAS.NOMBRE_LARGO
-     */
-    private void validarRazonSocialHTM(OrdenCompraHtmData data) throws Exception {
+    // ================= VALIDACIONES =================
 
-        String razonHtm = data.getDesde(); // HP Inc.
+    private void validarNumeroOrden(OrdenCompraHtmData data) throws ValidacionHtmException {
+        String orden = (data != null) ? data.getOrdenCompra() : null;
+
+        if (orden == null || orden.trim().isEmpty()) {
+            logger.error("❌ NÚMERO DE ORDEN VACÍO");
+            throw new ValidacionHtmException(E001_ORDEN_VACIA, "Número de orden obligatorio");
+        }
+
+        logger.info("✔ Número de orden válido: " + orden);
+    }
+
+    private void validarMoneda(OrdenCompraHtmData data) throws ValidacionHtmException {
+        String moneda = (data != null) ? data.getMoneda() : null;
+
+        if (moneda == null || moneda.trim().isEmpty()) {
+            logger.error("❌ MONEDA NULA/VACÍA");
+            throw new ValidacionHtmException(E002_MONEDA_INVALIDA, "Moneda obligatoria (MXN o USD)");
+        }
+
+        if (!"MXN".equalsIgnoreCase(moneda) && !"USD".equalsIgnoreCase(moneda)) {
+            logger.error("❌ MONEDA NO VÁLIDA: " + moneda);
+            throw new ValidacionHtmException(E002_MONEDA_INVALIDA, "Moneda no permitida: " + moneda);
+        }
+
+        logger.info("✔ Moneda válida: " + moneda);
+    }
+
+    private void validarImporte(OrdenCompraHtmData data) throws ValidacionHtmException {
+        BigDecimal monto = (data != null) ? data.getMonto() : null;
+
+        if (monto == null) {
+            logger.error("❌ IMPORTE NULO");
+            throw new ValidacionHtmException(E005_IMPORTE_INVALIDO, "Importe obligatorio");
+        }
+
+        if (monto.doubleValue() <= 0) {
+            logger.error("❌ IMPORTE INVÁLIDO: " + monto);
+            throw new ValidacionHtmException(E005_IMPORTE_INVALIDO, "Importe debe ser mayor a 0");
+        }
+
+        logger.info("✔ Importe válido: " + monto);
+    }
+
+    private void validarClasificacion(OrdenCompraHtmData data) throws ValidacionHtmException {
+        String clasificacion = (data != null) ? data.getClasificacionCodigo() : null;
+
+        if (clasificacion == null || clasificacion.trim().isEmpty()) {
+            logger.error("❌ CLASIFICACIÓN VACÍA");
+            throw new ValidacionHtmException(E006_CLASIF_VACIA, "Clasificación obligatoria");
+        }
+
+        logger.info("✔ Clasificación válida: " + clasificacion);
+    }
+
+    /**
+     * 3) Valida que la razón social (DESDE) del HTM exista en EMPRESAS.NOMBRE_LARGO
+     */
+    private void validarRazonSocialHTM(OrdenCompraHtmData data) throws ValidacionHtmException {
+
+        String razonHtm = (data != null) ? data.getDesde() : null;
 
         if (razonHtm == null || razonHtm.trim().isEmpty()) {
-            throw new Exception("Razón social HTM vacía");
+            throw new ValidacionHtmException(E003_EMPRESA_NO_EXISTE, "Razón social (DESDE) vacía");
         }
 
-        // OJO: aquí sí normalizas porque tu EMPRESAS está guardada así
+        // normalización básica para EMPRESAS (tu query usa LOWER/TRIM, así que es seguro)
         String razonNormalizada = normalizarBasica(razonHtm);
 
-        AccesoBean accesoBean = new AccesoBean();
-        EmpresasForm empresaBd = accesoBean.consultaEmpresaPorNombreLargo(razonNormalizada);
+        try {
+            AccesoBean accesoBean = new AccesoBean();
+            EmpresasForm empresaBd = accesoBean.consultaEmpresaPorNombreLargo(razonNormalizada);
 
-        if (empresaBd == null) {
-            logger.error("❌ RAZÓN SOCIAL NO REGISTRADA EN EMPRESAS: " + razonHtm);
-            throw new Exception("Empresa emisora no registrada");
+            if (empresaBd == null) {
+                logger.error("❌ RAZÓN SOCIAL NO REGISTRADA EN EMPRESAS: " + razonHtm);
+                throw new ValidacionHtmException(E003_EMPRESA_NO_EXISTE, "Empresa emisora no registrada: " + razonHtm);
+            }
+
+            logger.info("✔ Empresa emisora válida: " + empresaBd.getNombreLargo());
+
+        } catch (ValidacionHtmException vex) {
+            throw vex;
+        } catch (Exception e) {
+            throw new ValidacionHtmException(E003_EMPRESA_NO_EXISTE, "Error validando EMPRESA (DESDE): " + e.getMessage(), e);
         }
-
-        logger.info("✔ Empresa emisora válida: " + empresaBd.getNombreLargo());
     }
 
     /**
-     * Valida PROVEEDOR usando EXACTAMENTE el valor "PARA" tal como viene del HTM.
-     * (Sin trims, sin replace, sin limpiar espacios, sin candidatas)
+     * 4) Valida proveedor por RAZON SOCIAL del "PARA" en PROVEEDORES usando contrare_<esquema>.
      */
-    private void validarProveedorEmisorFlexible(OrdenCompraHtmData data, EmpresasForm empresaSesion) throws Exception {
+    private void validarProveedorPara(OrdenCompraHtmData data, EmpresasForm empresaSesion) throws ValidacionHtmException {
 
-        String proveedorRaw = data.getPara(); // TAL CUAL viene del HTM
+        String proveedorRaw = (data != null) ? data.getPara() : null;
 
-        if (proveedorRaw == null || proveedorRaw.isEmpty()) {
-            throw new Exception("Proveedor (PARA) vacío");
+        if (proveedorRaw == null || proveedorRaw.trim().isEmpty()) {
+            throw new ValidacionHtmException(E004_PROV_NO_EXISTE, "Proveedor (PARA) vacío");
         }
 
-        ProveedoresBean proveedoresBean = new ProveedoresBean();
+        try {
+            ProveedoresBean proveedoresBean = new ProveedoresBean();
 
-        logger.info("Validando proveedor (PARA) EXACTO: [" + proveedorRaw + "] esquema=" + empresaSesion.getEsquema());
+            logger.info("Validando proveedor (PARA) EXACTO: [" + proveedorRaw + "] esquema=" + empresaSesion.getEsquema());
 
-        // ✅ AQUÍ ya consulta en contrare_<esquema>
-        boolean existe = proveedoresBean.existeProveedorPorRazonSocial(proveedorRaw, empresaSesion.getEsquema());
+            // OJO: este método debe consultar en contrare_<esquema>
+            boolean existe = proveedoresBean.existeProveedorPorRazonSocial(proveedorRaw, empresaSesion.getEsquema());
 
-        if (!existe) {
-            logger.error("❌ PROVEEDOR (PARA) NO REGISTRADO exacto: [" + proveedorRaw + "]");
-            throw new Exception("Proveedor no registrado: " + proveedorRaw);
+            if (!existe) {
+                logger.error("❌ PROVEEDOR (PARA) NO REGISTRADO exacto: [" + proveedorRaw + "]");
+                throw new ValidacionHtmException(E004_PROV_NO_EXISTE, "Proveedor no registrado: " + proveedorRaw);
+            }
+
+            logger.info("✔ Proveedor válido (PARA): " + proveedorRaw);
+
+        } catch (ValidacionHtmException vex) {
+            throw vex;
+        } catch (Exception e) {
+            throw new ValidacionHtmException(E004_PROV_NO_EXISTE, "Error validando PROVEEDOR (PARA): " + e.getMessage(), e);
         }
-
-        logger.info("✔ Proveedor válido (PARA): " + proveedorRaw);
     }
 
+    // ================= BITÁCORA =================
 
+    /**
+     * Inserta bitácora SIN romper el flujo (si falla bitácora, solo loggea).
+     */
+    private void insertarBitacoraSeguro(EmpresasForm empresaSesion,
+                                       String numOrden,
+                                       String codError,
+                                       String descError,
+                                       String emailOrigen,
+                                       String asunto,
+                                       File archivoHtm) {
 
+        try {
+            BitacoraOrdenCompraHtmForm form = new BitacoraOrdenCompraHtmForm();
+            form.setNumOrden(numOrden);
+            form.setCodError(codError);
+            form.setDescError(descError);
 
-    private List<String> generarCandidatasProveedor(String razonRaw) {
+            form.setEmailOrigen(emailOrigen);
+            form.setAsunto(asunto);
+            form.setArchivoHtm(archivoHtm != null ? archivoHtm.getAbsolutePath() : null);
 
-        String raw = colapsarEspacios(razonRaw);
+            BitacoraOrdenCompraHtmBean bean = new BitacoraOrdenCompraHtmBean();
+            boolean ok = bean.insertar(form, empresaSesion.getEsquema()); // "mario" -> contrare_mario
 
-        Set<String> set = new LinkedHashSet<>();
-        set.add(raw); // 1. Completa
+            logger.info("BITACORA_ORDEN_COMPRA_HTM insert ok=" + ok
+                    + " esquema=" + empresaSesion.getEsquema()
+                    + " numOrden=" + numOrden
+                    + " cod=" + codError);
 
-        // 2. Sin Company Code (Quita US71...)
-        String sinCompanyCode = raw.replaceAll("(?i)\\bUS\\d{2,}\\b.*$", "").trim();
-        if (!sinCompanyCode.isEmpty()) set.add(sinCompanyCode);
-
-        // 3. Primeras 2 palabras
-        String primeras2 = primerasPalabras(raw, 2);
-        if (!primeras2.isEmpty()) set.add(primeras2);
-        
-        // 4. Primeras 3 palabras (A veces HP Inc. necesita el punto o una palabra más)
-        String primeras3 = primerasPalabras(raw, 3);
-        if (!primeras3.isEmpty()) set.add(primeras3);
-
-        // 5. Solo Texto y Espacios (quita puntos y comas)
-        String sinPuntos = raw.replace(".", "").replace(",", "").trim();
-        if (!sinPuntos.isEmpty()) set.add(sinPuntos);
-
-        return new ArrayList<>(set);
-    }
-
-    private String primerasPalabras(String texto, int n) {
-        if (texto == null) return "";
-        String t = colapsarEspacios(texto);
-        if (t.isEmpty()) return "";
-        String[] parts = t.split(" ");
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < parts.length && i < n; i++) {
-            if (i > 0) sb.append(" ");
-            sb.append(parts[i]);
+        } catch (Exception e) {
+            // NO debe tumbar el proceso, solo dejamos evidencia
+            logger.error("❌ No se pudo insertar bitácora HTM. esquema=" + empresaSesion.getEsquema()
+                    + " numOrden=" + numOrden
+                    + " cod=" + codError
+                    + " desc=" + descError, e);
         }
-        return sb.toString().trim();
     }
 
-    private String colapsarEspacios(String texto) {
-        return texto == null ? "" : texto.replaceAll("\\s+", " ").trim();
+    private String obtenerNumOrdenSeguro(OrdenCompraHtmData data, String fallback) {
+        try {
+            if (data != null) {
+                String o = data.getOrdenCompra();
+                if (o != null && !o.trim().isEmpty()) return o.trim();
+            }
+        } catch (Exception ignore) {}
+        return (fallback != null) ? fallback : "SIN_ORDEN";
     }
+
+    // ================= HELPERS =================
 
     private String normalizarBasica(String texto) {
         return texto == null ? null :
@@ -291,54 +430,15 @@ public class CorreoReader {
         return correoDe.trim().equalsIgnoreCase(config.trim());
     }
 
-    private void validarMoneda(OrdenCompraHtmData data) throws Exception {
-        String moneda = data.getMoneda();
-        if (moneda == null) {
-            logger.error("❌ MONEDA NULA");
-            throw new Exception("Moneda obligatoria");
-        }
-        if (!"MXN".equalsIgnoreCase(moneda) && !"USD".equalsIgnoreCase(moneda)) {
-            logger.error("❌ MONEDA NO VÁLIDA: " + moneda);
-            throw new Exception("Moneda no permitida: " + moneda);
-        }
-        logger.info("✔ Moneda válida: " + moneda);
-    }
-
-    private void validarImporte(OrdenCompraHtmData data) throws Exception {
-        if (data.getMonto() == null) {
-            logger.error("❌ IMPORTE NULO");
-            throw new Exception("Importe obligatorio");
-        }
-        if (data.getMonto().doubleValue() <= 0) {
-            logger.error("❌ IMPORTE INVÁLIDO: " + data.getMonto());
-            throw new Exception("Importe debe ser mayor a 0");
-        }
-        logger.info("✔ Importe válido: " + data.getMonto());
-    }
-
-    private void validarClasificacion(OrdenCompraHtmData data) throws Exception {
-        String clasificacion = data.getClasificacionCodigo();
-        if (clasificacion == null || clasificacion.trim().isEmpty()) {
-            logger.error("❌ CLASIFICACIÓN VACÍA");
-            throw new Exception("Clasificación obligatoria");
-        }
-        logger.info("✔ Clasificación válida: " + clasificacion);
-    }
-
-    private void validarNumeroOrden(OrdenCompraHtmData data) throws Exception {
-        String orden = data.getOrdenCompra();
-        if (orden == null || orden.trim().isEmpty()) {
-            logger.error("❌ NÚMERO DE ORDEN VACÍO");
-            throw new Exception("Número de orden obligatorio");
-        }
-        logger.info("✔ Número de orden válido: " + orden);
-    }
-
+    /**
+     * Log de datos extraídos del HTM
+     */
     private void logDatos(OrdenCompraHtmData data) {
+
         logger.info("========== DATOS ORDEN (HTM) ==========");
         logger.info("ORDEN: " + data.getOrdenCompra());
-        logger.info("PROVEEDOR (DESDE): " + data.getDesde()); // Quien envía la factura
-        logger.info("EMPLEADO (PARA): " + data.getPara());    // Quien recibe
+        logger.info("PROVEEDOR (DESDE): " + data.getDesde());
+        logger.info("EMPLEADO (PARA): " + data.getPara());
         logger.info("EMPRESA (RAW): " + data.getEmpresa());
         logger.info("RFC/TAXID: " + data.getTaxId());
         logger.info("MONEDA: " + data.getMoneda());
