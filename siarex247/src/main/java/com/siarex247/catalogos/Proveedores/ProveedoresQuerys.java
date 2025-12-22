@@ -33,6 +33,13 @@ public class ProveedoresQuerys {
 
 	public static String UPDATE_CERTIFICADOS_PROVEEDOR = "update PROVEEDORES set PASSWORD_SAT = ?, ARCHIVO_CER = ?, ARCHIVO_KEY = ?, NUMERO_CERTIFICADO = ? where CLAVE_PROVEEDOR = ?";
 
+	// VALIDAR PROVEEDOR POR RAZON SOCIAL (HTML)
+	private static String infoProveedorXRazonSocial =
+	    "SELECT CLAVE_PROVEEDOR, RAZON_SOCIAL, RFC " +
+	    "FROM PROVEEDORES " +
+	    "WHERE UPPER(TRIM(RAZON_SOCIAL)) = UPPER(TRIM(?)) " +
+	    "AND ESTATUS_REGISTRO = 'A'";
+
 	
 	public static String getQueryDetalleProveedor(String esquema) {
 		return detalleProveedor.replaceAll("<<esquema>>", esquema);
@@ -133,5 +140,11 @@ public class ProveedoresQuerys {
 	public static String getQueryProveedoresTipo(String esquema) {
 		return queryProveedoresTipo.replaceAll("<<esquema>>", esquema);
 	}
+	
+	public static String getInfoProveedorXRazonSocial(String esquema) {
+	    return infoProveedorXRazonSocial.replaceAll("<<esquema>>", esquema);
+	}
+
+	
 }
 

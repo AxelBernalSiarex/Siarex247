@@ -35,7 +35,7 @@ public class TaskManagerHistoricoPagos {
 			Date fechaActual = new Date();
 			SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm:ss");
 			String horaActual = formatTime.format(fechaActual);
-			logger.info("Ejecutando proceso de Envio de Complementos del dia 1 a las : "+horaActual);
+			//logger.info("Ejecutando proceso de Envio de Complementos del dia 1 a las : "+horaActual);
 			HistoricoPagosProceso compleProceso = new HistoricoPagosProceso();
 			ProcesoMonitorBean procMon = new ProcesoMonitorBean();
 			compleProceso.monitoreaComplementoHistoricoP(1); // dia 1

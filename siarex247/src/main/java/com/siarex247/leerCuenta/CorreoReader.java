@@ -1,7 +1,11 @@
 package com.siarex247.leerCuenta;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.mail.BodyPart;
 import javax.mail.Flags;
@@ -18,6 +22,7 @@ import javax.mail.search.FlagTerm;
 
 import org.apache.log4j.Logger;
 
+import com.siarex247.catalogos.Proveedores.ProveedoresBean;
 import com.siarex247.seguridad.Accesos.AccesoBean;
 import com.siarex247.seguridad.Accesos.EmpresasForm;
 import com.siarex247.utils.Utils;
@@ -66,7 +71,7 @@ public class CorreoReader {
             inbox = store.getFolder("INBOX");
             inbox.open(Folder.READ_WRITE);
 
-            // 🔹 SOLO correos NO LEÍDOS
+            // SOLO correos NO LEÍDOS
             FlagTerm noLeidos = new FlagTerm(new Flags(Flags.Flag.SEEN), false);
             Message[] mensajes = inbox.search(noLeidos);
 
@@ -79,7 +84,7 @@ public class CorreoReader {
                     String correoDe = ((InternetAddress) msg.getFrom()[0]).getAddress();
                     logger.info("Correo entrante de: " + correoDe);
 
-                    // 🚫 CORREO NO DESEADO
+                    // CORREO NO DESEADO
                     if (esCorreoNoDeseado(correoDe, correoNoDeseadoCfg)) {
                         logger.info("Correo OMITIDO por configuración: " + correoDe);
                         msg.setFlag(Flags.Flag.SEEN, true);
@@ -137,9 +142,7 @@ public class CorreoReader {
                 + File.separator + "CORREO_FACTURAS"
             );
 
-            if (!carpeta.exists()) {
-                carpeta.mkdirs();
-            }
+            if (!carpeta.exists()) carpeta.mkdirs();
 
             File archivo = new File(carpeta, fileName);
             ((MimeBodyPart) part).saveFile(archivo);
@@ -150,10 +153,28 @@ public class CorreoReader {
             AribaHtmParser parser = new AribaHtmParser();
             OrdenCompraHtmData data = parser.parse(archivo);
 
-            // ================= VALIDACIÓN RAZÓN SOCIAL =================
+            // LOG DEPURACIÓN (Verificamos qué extrajo el parser)
+            logger.info("--- DATOS EXTRAÍDOS DEL PARSER ---");
+            logger.info("DESDE (Proveedor): " + data.getDesde());
+            logger.info("PARA  (Destinatario/Empleado): " + data.getPara());
+            logger.info("----------------------------------");
+
+            // ================= VALIDACIONES OBLIGATORIAS =================
+            validarNumeroOrden(data);
+            validarMoneda(data);
+            validarImporte(data);
+            validarClasificacion(data);
+
+            // ================= VALIDACIÓN EMPRESA (EMISOR) =================
+            // Validamos que el DESDE (HP) exista como empresa
             validarRazonSocialHTM(data);
 
-            // ================= LOG DATOS =================
+            // ================= VALIDACIÓN PROVEEDOR (EMISOR) =================
+            // Validamos que el DESDE (HP) exista como proveedor
+            validarProveedorEmisorFlexible(data, empresaSesion);
+
+
+            // ================= LOG FINAL =================
             logDatos(data);
         }
     }
@@ -163,20 +184,20 @@ public class CorreoReader {
      */
     private void validarRazonSocialHTM(OrdenCompraHtmData data) throws Exception {
 
-        String razonHtm = data.getDesde();
+        String razonHtm = data.getDesde(); // HP Inc.
 
         if (razonHtm == null || razonHtm.trim().isEmpty()) {
             throw new Exception("Razón social HTM vacía");
         }
 
-        String razonNormalizada = normalizar(razonHtm);
+        // OJO: aquí sí normalizas porque tu EMPRESAS está guardada así
+        String razonNormalizada = normalizarBasica(razonHtm);
 
         AccesoBean accesoBean = new AccesoBean();
-        EmpresasForm empresaBd =
-            accesoBean.consultaEmpresaPorNombreLargo(razonNormalizada);
+        EmpresasForm empresaBd = accesoBean.consultaEmpresaPorNombreLargo(razonNormalizada);
 
         if (empresaBd == null) {
-            logger.error("❌ RAZÓN SOCIAL NO REGISTRADA: " + razonHtm);
+            logger.error("❌ RAZÓN SOCIAL NO REGISTRADA EN EMPRESAS: " + razonHtm);
             throw new Exception("Empresa emisora no registrada");
         }
 
@@ -184,39 +205,142 @@ public class CorreoReader {
     }
 
     /**
-     * Normaliza texto para comparación
+     * Valida PROVEEDOR usando EXACTAMENTE el valor "PARA" tal como viene del HTM.
+     * (Sin trims, sin replace, sin limpiar espacios, sin candidatas)
      */
-    private String normalizar(String texto) {
+    private void validarProveedorEmisorFlexible(OrdenCompraHtmData data, EmpresasForm empresaSesion) throws Exception {
 
+        String proveedorRaw = data.getPara(); // TAL CUAL viene del HTM
+
+        if (proveedorRaw == null || proveedorRaw.isEmpty()) {
+            throw new Exception("Proveedor (PARA) vacío");
+        }
+
+        ProveedoresBean proveedoresBean = new ProveedoresBean();
+
+        logger.info("Validando proveedor (PARA) EXACTO: [" + proveedorRaw + "] esquema=" + empresaSesion.getEsquema());
+
+        // ✅ AQUÍ ya consulta en contrare_<esquema>
+        boolean existe = proveedoresBean.existeProveedorPorRazonSocial(proveedorRaw, empresaSesion.getEsquema());
+
+        if (!existe) {
+            logger.error("❌ PROVEEDOR (PARA) NO REGISTRADO exacto: [" + proveedorRaw + "]");
+            throw new Exception("Proveedor no registrado: " + proveedorRaw);
+        }
+
+        logger.info("✔ Proveedor válido (PARA): " + proveedorRaw);
+    }
+
+
+
+
+    private List<String> generarCandidatasProveedor(String razonRaw) {
+
+        String raw = colapsarEspacios(razonRaw);
+
+        Set<String> set = new LinkedHashSet<>();
+        set.add(raw); // 1. Completa
+
+        // 2. Sin Company Code (Quita US71...)
+        String sinCompanyCode = raw.replaceAll("(?i)\\bUS\\d{2,}\\b.*$", "").trim();
+        if (!sinCompanyCode.isEmpty()) set.add(sinCompanyCode);
+
+        // 3. Primeras 2 palabras
+        String primeras2 = primerasPalabras(raw, 2);
+        if (!primeras2.isEmpty()) set.add(primeras2);
+        
+        // 4. Primeras 3 palabras (A veces HP Inc. necesita el punto o una palabra más)
+        String primeras3 = primerasPalabras(raw, 3);
+        if (!primeras3.isEmpty()) set.add(primeras3);
+
+        // 5. Solo Texto y Espacios (quita puntos y comas)
+        String sinPuntos = raw.replace(".", "").replace(",", "").trim();
+        if (!sinPuntos.isEmpty()) set.add(sinPuntos);
+
+        return new ArrayList<>(set);
+    }
+
+    private String primerasPalabras(String texto, int n) {
+        if (texto == null) return "";
+        String t = colapsarEspacios(texto);
+        if (t.isEmpty()) return "";
+        String[] parts = t.split(" ");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < parts.length && i < n; i++) {
+            if (i > 0) sb.append(" ");
+            sb.append(parts[i]);
+        }
+        return sb.toString().trim();
+    }
+
+    private String colapsarEspacios(String texto) {
+        return texto == null ? "" : texto.replaceAll("\\s+", " ").trim();
+    }
+
+    private String normalizarBasica(String texto) {
         return texto == null ? null :
             texto.toLowerCase()
                  .replace(".", "")
                  .replace(",", "")
-                 .replace("  ", " ")
+                 .replaceAll("\\s+", " ")
                  .trim();
     }
 
-    /**
-     * Valida correo no deseado (configuración)
-     */
     private boolean esCorreoNoDeseado(String correoDe, String config) {
-
         if (correoDe == null || config == null || config.trim().isEmpty()) return false;
-
         return correoDe.trim().equalsIgnoreCase(config.trim());
     }
 
-    /**
-     * Log de datos extraídos del HTM
-     */
-    private void logDatos(OrdenCompraHtmData data) {
+    private void validarMoneda(OrdenCompraHtmData data) throws Exception {
+        String moneda = data.getMoneda();
+        if (moneda == null) {
+            logger.error("❌ MONEDA NULA");
+            throw new Exception("Moneda obligatoria");
+        }
+        if (!"MXN".equalsIgnoreCase(moneda) && !"USD".equalsIgnoreCase(moneda)) {
+            logger.error("❌ MONEDA NO VÁLIDA: " + moneda);
+            throw new Exception("Moneda no permitida: " + moneda);
+        }
+        logger.info("✔ Moneda válida: " + moneda);
+    }
 
+    private void validarImporte(OrdenCompraHtmData data) throws Exception {
+        if (data.getMonto() == null) {
+            logger.error("❌ IMPORTE NULO");
+            throw new Exception("Importe obligatorio");
+        }
+        if (data.getMonto().doubleValue() <= 0) {
+            logger.error("❌ IMPORTE INVÁLIDO: " + data.getMonto());
+            throw new Exception("Importe debe ser mayor a 0");
+        }
+        logger.info("✔ Importe válido: " + data.getMonto());
+    }
+
+    private void validarClasificacion(OrdenCompraHtmData data) throws Exception {
+        String clasificacion = data.getClasificacionCodigo();
+        if (clasificacion == null || clasificacion.trim().isEmpty()) {
+            logger.error("❌ CLASIFICACIÓN VACÍA");
+            throw new Exception("Clasificación obligatoria");
+        }
+        logger.info("✔ Clasificación válida: " + clasificacion);
+    }
+
+    private void validarNumeroOrden(OrdenCompraHtmData data) throws Exception {
+        String orden = data.getOrdenCompra();
+        if (orden == null || orden.trim().isEmpty()) {
+            logger.error("❌ NÚMERO DE ORDEN VACÍO");
+            throw new Exception("Número de orden obligatorio");
+        }
+        logger.info("✔ Número de orden válido: " + orden);
+    }
+
+    private void logDatos(OrdenCompraHtmData data) {
         logger.info("========== DATOS ORDEN (HTM) ==========");
         logger.info("ORDEN: " + data.getOrdenCompra());
-        logger.info("DESDE (RAZÓN SOCIAL): " + data.getDesde());
-        logger.info("PARA (CONTACTO): " + data.getPara());
-        logger.info("EMPRESA: " + data.getEmpresa());
-        logger.info("RFC: " + data.getTaxId());
+        logger.info("PROVEEDOR (DESDE): " + data.getDesde()); // Quien envía la factura
+        logger.info("EMPLEADO (PARA): " + data.getPara());    // Quien recibe
+        logger.info("EMPRESA (RAW): " + data.getEmpresa());
+        logger.info("RFC/TAXID: " + data.getTaxId());
         logger.info("MONEDA: " + data.getMoneda());
         logger.info("MONTO: " + data.getMonto());
         logger.info("CLASIFICACIÓN: " + data.getClasificacionCodigo());

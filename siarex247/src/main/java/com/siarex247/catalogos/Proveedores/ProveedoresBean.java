@@ -9,6 +9,8 @@ import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 
+import com.siarex247.bd.ConexionDB;
+import com.siarex247.bd.ResultadoConexion;
 import com.siarex247.seguridad.Lenguaje.LenguajeBean;
 import com.siarex247.utils.Gramatica;
 import com.siarex247.utils.Utils;
@@ -1307,6 +1309,54 @@ public class ProveedoresBean {
 	        try { if (stmt != null) stmt.close(); } catch (Exception ex) {}
 	    }
 	}
+	
+	
+	public boolean existeProveedorPorRazonSocial(String razonSocial, String esquemaEmpresa) {
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    ResultadoConexion rc = null;
+	    ConexionDB connPool = new ConexionDB();
+	    Connection con = null;
+
+	    boolean existe = false;
+
+	    try {
+	        // ✅ OJO: aquí usamos la conexión por empresa (contrare_<esquema>)
+	        rc = connPool.getConnection(esquemaEmpresa);
+	        con = rc.getCon();
+
+	        // Opcional: asegurar catálogo
+	        try {
+	            if (rc != null && rc.getEsquema() != null && !rc.getEsquema().trim().isEmpty()) {
+	                con.setCatalog(rc.getEsquema()); // ej: contrare_mario
+	            }
+	        } catch (Exception ignore) {}
+
+	        stmt = con.prepareStatement(ProveedoresQuerys.getInfoProveedorXRazonSocial(""));
+	        stmt.setString(1, razonSocial);
+
+	        logger.info("existeProveedorPorRazonSocial(" + rc.getEsquema() + ") -> " + stmt);
+
+	        rs = stmt.executeQuery();
+	        if (rs.next()) {
+	            existe = true;
+	        }
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("Error validando proveedor por razón social", e);
+	    } finally {
+	        try {
+	            if (rs != null) rs.close();
+	            if (stmt != null) stmt.close();
+	            if (con != null) con.close();
+	        } catch (Exception e) {}
+	    }
+
+	    return existe;
+	}
+
+
+
 
 
 

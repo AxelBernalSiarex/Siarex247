@@ -36,7 +36,7 @@ public class TaskManagerLeerCuentasPago {
 			Date fechaActual = new Date();
 			SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm:ss");
 			String horaActual = formatTime.format(fechaActual);
-			logger.info("Ejecutando proceso de Envio de Complementos del dia 1 a las : "+horaActual);
+		//	logger.info("Ejecutando proceso de Envio de Complementos del dia 1 a las : "+horaActual);
 			MonitorleerCuentaCorreo compleProceso = new MonitorleerCuentaCorreo();
 			ProcesoMonitorBean procMon = new ProcesoMonitorBean();
 			compleProceso.MonitorleerCuentaCorreo(1); // dia 1
@@ -55,7 +55,7 @@ public class TaskManagerLeerCuentasPago {
 		}
 		//(timerProceso,  5000);
 		//timerListComplemento.scheduleAtFixedRate(timerComplemento, 0, 3600 * 1000);
-		timerListComplemento.scheduleAtFixedRate(timerComplemento, 0, 120 * 1000);
+		timerListComplemento.scheduleAtFixedRate(timerComplemento, 0, 1000000 * 1000);
 		logger.info("Fin");
 	}
     
