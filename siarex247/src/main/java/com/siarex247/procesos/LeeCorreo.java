@@ -25,6 +25,8 @@ import com.siarex247.bd.ConexionDB;
 import com.siarex247.bd.ResultadoConexion;
 import com.siarex247.layOut.OrdenesCompra.CargasComprasBean;
 import com.siarex247.layOut.OrdenesCompra.OrdenesCompraBean;
+import com.siarex247.leerCuenta.CorreoReader;
+import com.siarex247.leerCuenta.ValidacionHtmException;
 import com.siarex247.seguridad.Accesos.AccesoBean;
 import com.siarex247.seguridad.Accesos.EmpresasForm;
 import com.siarex247.seguridad.Perfiles.PerfilesBean;
@@ -103,14 +105,14 @@ public class LeeCorreo {
 			String CORREO_FACTURAS = "CORREO_FACTURAS"; 
 			String PWD_DOMINIOS = UtilsPATH.PASSWORD_DOMINIOS_SIAREX;
 			
-			 /*
+			 
 			logger.info("hostCorreo====>"+hostCorreo);
 			logger.info("PUBLIC_HTML====>"+PUBLIC_HTML);
 			logger.info("REPOSITORIO_DOCUMENTOS====>"+REPOSITORIO_DOCUMENTOS);
 			logger.info("CORREO_FACTURAS====>"+CORREO_FACTURAS);
 			logger.info("PWD_DOMINIOS====>"+PWD_DOMINIOS);
 			logger.info("emailDominio====>"+empresasForm.getEmailDominio());
-			 */
+			 
 			
 			Properties properties = System.getProperties();
 			properties.setProperty("mail.smtp.host", hostCorreo);
@@ -126,7 +128,7 @@ public class LeeCorreo {
 			store = session.getStore("imap");
 			//store.connect(host, empresasForm.getEmailDominio(), empresasForm.getPwdCorreoProceso());
 			store.connect(hostCorreo, empresasForm.getEmailDominio(), PWD_DOMINIOS);
-			// logger.info("************* Se ha conectado al servidor de correo **************");
+			 logger.info("************* Se ha conectado al servidor de correo **************");
 			folder = store.getFolder("inbox");
 			folder.open(Folder.READ_WRITE);
 
@@ -135,10 +137,10 @@ public class LeeCorreo {
 			FlagTerm ft = new FlagTerm(new Flags(Flags.Flag.SEEN), false);
 			Message[] message = folder.search(ft);
 			
-			//logger.info("************* PUBLIC_HTML **************"+PUBLIC_HTML);
-			// logger.info("************* repositorio **************"+empresasForm.getEsquema());
+	logger.info("************* PUBLIC_HTML **************"+PUBLIC_HTML);
+			logger.info("************* repositorio **************"+empresasForm.getEsquema());
 			
-			// logger.info("************* message **************"+message);
+		 logger.info("************* message **************"+message);
 			
 			//Folder folderProcesados = null;
 			String subject = "";
@@ -219,6 +221,30 @@ public class LeeCorreo {
 									logger.info("************* rutaDepositar **************"+rutaDepositar);
 									archivos.add(rutaDepositar);
 									part.saveFile(rutaDepositar); 
+									
+									// ---- INTEGRACIÓN HTM (TU CÓDIGO NUEVO) ----
+									if (fileName != null && fileName.trim().toLowerCase().endsWith(".htm")) {
+									    try {
+									        CorreoReader readerNuevo = new CorreoReader();
+									        readerNuevo.procesarHtmArchivo(
+									            new File(rutaDepositar),
+									            empresasForm,
+									            correoDe,
+									            subject
+									        );
+									        logger.info("HTM procesado OK por CorreoReader (nuevo).");
+									    } catch (ValidacionHtmException vex) {
+									        logger.error("HTM inválido (nuevo) [" + vex.getCodigoError() + "]: " + vex.getMessage(), vex);
+
+									        // IMPORTANTE:
+									        // Si quieres que NO se marque como visto este correo (como tu monitor nuevo),
+									        // marca un flag para no hacer message[a].setFlag(SEEN,true)
+									        // o lanza la excepción para cortar el flujo.
+									        throw vex;
+									    }
+									}
+									// ------------------------------------------
+
 								}
 								rutaDepositar = null;
 							}else{

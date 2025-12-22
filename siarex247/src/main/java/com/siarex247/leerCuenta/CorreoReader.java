@@ -446,4 +446,93 @@ public class CorreoReader {
         logger.info("CLASIFICACIÓN: " + data.getClasificacionCodigo());
         logger.info("======================================");
     }
+    
+    
+    
+    
+ // ================= USO EXTERNO (LeeCorreo 2012) =================
+
+    /**
+     * Procesa un archivo HTM YA GUARDADO en disco (lo llama LeeCorreo).
+     * - Aplica parser + validaciones con código
+     * - Inserta bitácora en caso de error
+     * - Si falla, lanza ValidacionHtmException para que el caller NO marque el correo como leído.
+     */
+    public void procesarHtmArchivo(File archivoHtm,
+                                  EmpresasForm empresaSesion,
+                                  String emailOrigen,
+                                  String asunto) throws ValidacionHtmException {
+
+        if (archivoHtm == null || !archivoHtm.exists()) {
+            throw new ValidacionHtmException(E999_ERROR_GENERAL, "Archivo HTM no existe: " + (archivoHtm != null ? archivoHtm.getAbsolutePath() : "null"));
+        }
+
+        OrdenCompraHtmData data = null;
+        String fileName = archivoHtm.getName();
+
+        try {
+            // 1) PARSE
+            AribaHtmParser parser = new AribaHtmParser();
+            data = parser.parse(archivoHtm);
+
+            logger.info("--- HTM (EXTERNO) DATOS EXTRAÍDOS ---");
+            logger.info("DESDE (Proveedor): " + data.getDesde());
+            logger.info("PARA  (Empleado):  " + data.getPara());
+            logger.info("------------------------------------");
+
+            // 2) VALIDACIONES (CON CÓDIGO)
+            validarNumeroOrden(data);
+            validarMoneda(data);
+            validarImporte(data);
+            validarClasificacion(data);
+
+            // 3) EMPRESA (DESDE) exista en EMPRESAS
+            validarRazonSocialHTM(data);
+
+            // 4) PROVEEDOR (PARA) exista en PROVEEDORES (contrare_<esquema>)
+            validarProveedorPara(data, empresaSesion);
+
+            // OK
+            logDatos(data);
+
+        } catch (ValidacionHtmException vex) {
+
+            String numOrden = obtenerNumOrdenSeguro(data, fileName);
+
+            // BITÁCORA error validación
+            insertarBitacoraSeguro(
+                empresaSesion,
+                numOrden,
+                vex.getCodigoError(),
+                vex.getMessage(),
+                emailOrigen,
+                asunto,
+                archivoHtm
+            );
+
+            throw vex;
+
+        } catch (Exception ex) {
+
+            String numOrden = obtenerNumOrdenSeguro(data, fileName);
+            String desc = (ex.getMessage() != null && !ex.getMessage().trim().isEmpty())
+                    ? ex.getMessage()
+                    : "Error general procesando HTM";
+
+            // BITÁCORA error general
+            insertarBitacoraSeguro(
+                empresaSesion,
+                numOrden,
+                E999_ERROR_GENERAL,
+                desc,
+                emailOrigen,
+                asunto,
+                archivoHtm
+            );
+
+            throw new ValidacionHtmException(E999_ERROR_GENERAL, "Error general procesando HTM: " + desc, ex);
+        }
+    }
+
+    
 }
