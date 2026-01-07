@@ -1354,6 +1354,50 @@ public class ProveedoresBean {
 
 	    return existe;
 	}
+	
+	public ProveedoresForm obtenerProveedorPorRazonSocial(
+	        Connection con,
+	        String esquema,
+	        String razonSocial
+	) {
+
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
+
+	    try {
+	        String sql = String.format(
+	            ProveedoresQuerys.OBTENER_PROVEEDOR_POR_RAZON_SOCIAL,
+	            esquema
+	        );
+
+	        ps = con.prepareStatement(sql);
+	        ps.setString(1, razonSocial);
+
+	        logger.info("obtenerProveedorPorRazonSocial -> " + ps);
+
+	        rs = ps.executeQuery();
+
+	        if (rs.next()) {
+	            ProveedoresForm form = new ProveedoresForm();
+
+	            // ✔ SOLO lo que sí existe en el Form
+	            form.setRazonSocial(rs.getString("RAZON_SOCIAL"));
+	            form.setRfc(rs.getString("RFC"));
+
+	            return form;
+	        }
+
+	    } catch (Exception e) {
+	        logger.error("Error obteniendo proveedor por razón social: " + razonSocial, e);
+	    } finally {
+	        try { if (rs != null) rs.close(); } catch (Exception ignore) {}
+	        try { if (ps != null) ps.close(); } catch (Exception ignore) {}
+	    }
+
+	    return null;
+	}
+
+
 
 
 

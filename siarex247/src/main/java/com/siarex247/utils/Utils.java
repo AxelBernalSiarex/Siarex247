@@ -772,6 +772,10 @@ public class Utils {
 		 return claveRegimen;
 	 }
  */
+	 	
+	 	public static boolean esVacio(String s) {
+	 	    return s == null || s.trim().isEmpty();
+	 	}
 	 
 	 
 }

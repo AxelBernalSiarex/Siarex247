@@ -39,6 +39,15 @@ public class ProveedoresQuerys {
 		    "FROM PROVEEDORES " +
 		    "WHERE TRIM(RAZON_SOCIAL) = TRIM(?) " +
 		    "AND ESTATUS_REGISTRO = 'A'";
+	
+	// Obtiene proveedor por razón social (RFC incluido)
+	public static final String OBTENER_PROVEEDOR_POR_RAZON_SOCIAL =
+	    "SELECT CLAVE_PROVEEDOR, RAZON_SOCIAL, RFC " +
+	    "FROM %s.PROVEEDORES " +
+	    "WHERE UPPER(TRIM(RAZON_SOCIAL)) = UPPER(TRIM(?)) " +
+	    "AND ESTATUS_REGISTRO = 'A' " +
+	    "LIMIT 1";
+
 
 
 	

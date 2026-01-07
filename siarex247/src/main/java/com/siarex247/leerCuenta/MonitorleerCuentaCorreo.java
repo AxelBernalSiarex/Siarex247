@@ -42,7 +42,7 @@ public class MonitorleerCuentaCorreo {
                 logger.info(" Email: " + empresa.getEmailDominio());
                 logger.info("==============================================");
 
-                reader.leerCuenta(empresa);
+                //reader.leerCuenta(empresa);
             }
 
         } catch (Exception e) {

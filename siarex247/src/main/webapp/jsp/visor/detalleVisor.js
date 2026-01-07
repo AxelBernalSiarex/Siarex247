@@ -228,8 +228,10 @@ var tablaDetalleVisor = null;
 	                   },
 	                   {	targets: 2,
 					        render: function (data, type, row) {
-					        	rowElement = '<a href="javascript:verDocumento(\'PDF_ORDEN\',\'' + row.folioOrden + '\');">' + row.folioEmpresa + '</a>';
-					            return rowElement;
+					        	//rowElement = '<a href="javascript:verDocumento(\'PDF_ORDEN\',\'' + row.folioOrden + '\');">' + row.folioEmpresa + '</a>';
+								rowElement = '<a href="javascript:verDocumento(\'PDF_ORDEN\',\'' + row.folioOrden + '|' + row.folioEmpresa + '\');">' + row.folioEmpresa + '</a>';
+
+								return rowElement;
 					        }
 					    },
 	                {
@@ -1041,49 +1043,109 @@ var tablaDetalleVisor = null;
 	
 	
 	function verDocumento(tipoDocumento, folioOrden){
-		try{
-			if (tipoDocumento == 'PDF_ORDEN'){
-				$.ajax({
-					url  : '/siarex247/visor/tablero/consultarOrden.action',
-					type : 'POST', 
-					data : {
-						folioOrden : folioOrden
-					},
-					dataType : 'json',
-					success  : function(data) {
-						if($.isEmptyObject(data)) {
-						} else {
-							
-							if ( data.nombreArchivo == ''){
-								Swal.fire({
-		  			                title: MSG_ERROR_OPERACION_MENU,
-		  			                //html: '<p>La orden seleccionado no contiene un archivo .PDF</p>',	
-		  			                html: '<p>' + VISOR_MSG4 + '</p>',
-		  			                icon: 'info'
-		  			            });
-							}else{
-								$('#tipoDocumento_MostrarDocumento').val(tipoDocumento);
-								$('#folioOrden_MostrarDocumento').val(folioOrden);
-								document.frmMostrarDocumento.submit();
-							}
-						}
-					},
-					error : function(xhr, ajaxOptions, thrownError) {
-						alert('consultarNotaCredito()_'+thrownError);
-					}
-				});
-			}else{
-				$('#tipoDocumento_MostrarDocumento').val(tipoDocumento);
-				$('#folioOrden_MostrarDocumento').val(folioOrden);
-				document.frmMostrarDocumento.submit();	
-			}
-			
-			
-		}catch(e){
-			alert('verDocumento()_'+e);
-		}
+	  try {
+	    // folioOrden puede venir:
+	    //  - "30|4514143696" (recomendado: id interno | orden compra)
+	    //  - "30" (legacy)
+	    var raw = (folioOrden || '').toString().trim();
+	    var parts = raw.split('|');
+
+	    var idOrdenInterno = (parts[0] || '').toString().trim(); // ej: "30"
+	    var ordenCompra    = (parts.length > 1 ? parts[1] : parts[0] || '').toString().trim(); // ej: "4514143696"
+
+	    // Evita duplicar extensiones si por error ya viniera con .htm/.html/.pdf
+	    ordenCompra = ordenCompra.replace(/(\.htm|\.html|\.pdf)$/i, '');
+
+	    // SOLO para PDF_ORDEN: primero buscar HTM/HTML; si no hay => PDF (mostrarDocumento.jsp)
+	    if (tipoDocumento === 'PDF_ORDEN') {
+
+	      var baseUrl = '/siarex247/files/';
+	      var candidates = [
+	        ordenCompra + '.htm',
+	        ordenCompra + '.html'
+	      ];
+
+	      function tryOpenHtml(idx){
+	        if (idx >= candidates.length) {
+	          // No existe HTM/HTML => fallback al flujo actual PDF
+	          $.ajax({
+	            url  : '/siarex247/visor/tablero/consultarOrden.action',
+	            type : 'POST',
+	            data : { folioOrden : idOrdenInterno }, // ✅ usa el ID interno (30) para encontrar nombreArchivo/pdf
+	            dataType : 'json',
+	            success  : function(data) {
+	              if ($.isEmptyObject(data)) return;
+
+	              var nombrePdf = (data.nombreArchivo || '').toString().trim();
+	              if (!nombrePdf) {
+	                Swal.fire({
+	                  title: MSG_ERROR_OPERACION_MENU,
+	                  html: '<p>' + VISOR_MSG4 + '</p>',
+	                  icon: 'info'
+	                });
+	                return;
+	              }
+
+	              $('#tipoDocumento_MostrarDocumento').val('PDF_ORDEN');
+	              $('#folioOrden_MostrarDocumento').val(idOrdenInterno);
+	              document.frmMostrarDocumento.submit();
+	            },
+	            error : function(xhr, ajaxOptions, thrownError) {
+	              alert('consultarOrden()_' + thrownError);
+	            }
+	          });
+	          return;
+	        }
+
+	        var url = baseUrl + candidates[idx] + '?_=' + Date.now();
+
+	        // Intentar HEAD primero (si el server lo permite); si falla, probamos siguiente
+	        $.ajax({
+	          url: url,
+	          type: 'HEAD',
+	          cache: false,
+	          success: function(){
+	            window.open(url, '_blank'); // ✅ abre HTM y NO va a mostrarDocumento.jsp
+	          },
+	          error: function(xhr){
+	            // Si HEAD no está permitido, intenta GET una vez antes de rendirse
+	            if (xhr && (xhr.status === 405 || xhr.status === 501)) {
+	              $.ajax({
+	                url: url,
+	                type: 'GET',
+	                cache: false,
+	                dataType: 'text',
+	                success: function(){
+	                  window.open(url, '_blank');
+	                },
+	                error: function(){
+	                  tryOpenHtml(idx + 1);
+	                }
+	              });
+	            } else {
+	              tryOpenHtml(idx + 1);
+	            }
+	          }
+	        });
+	      }
+
+	      tryOpenHtml(0);
+	      return; // IMPORTANTÍSIMO: evita que se vaya “sí o sí” a mostrarDocumento.jsp
+	    }
+
+	    // Otros documentos: comportamiento actual
+	    $('#tipoDocumento_MostrarDocumento').val(tipoDocumento);
+	    $('#folioOrden_MostrarDocumento').val(idOrdenInterno || raw);
+	    document.frmMostrarDocumento.submit();
+
+	  } catch (e) {
+	    alert('verDocumento()_' + e);
+	  }
 	}
-	
+
+
+
+
 	
 	
 	
