@@ -19,6 +19,7 @@ import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 
+import com.siarex247.descargaMasivaSat.HistoricoProcesoSATForm;
 import com.siarex247.utils.Utils;
 import com.siarex247.utils.UtilsColor;
 import com.siarex247.utils.UtilsFechas;
@@ -1379,4 +1380,69 @@ public String consultarFechaMinimaNomina(Connection con, String esquema) {
 			  Utils.imprimeLog("", e);
 		  }
 	 }	
+	
+	public ArrayList<HistoricoProcesoSATForm> consultarHistoricoMetadataHoy(Connection con, String esquema) {
+
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    ArrayList<HistoricoProcesoSATForm> lista = new ArrayList<>();
+
+	    try {
+	        logger.info("consultarHistoricoMetadataHoy() ENTRO. esquema=" + esquema);
+
+	        String sql = DescargaSATQuerys.getConsultarHistoricoMetadataHoy(esquema);
+	        logger.info("SQL consultarHistoricoMetadataHoy = " + sql);
+
+	        stmt = con.prepareStatement(sql);
+	        stmt.setString(1, "Metadata");
+
+	        // imprime el SQL ya bindeado (normalmente el driver lo muestra)
+	       // logger.info("consultarHistoricoMetadataHoy -> " + stmt);
+
+	        rs = stmt.executeQuery();
+
+	        while (rs.next()) {
+	            HistoricoProcesoSATForm f = new HistoricoProcesoSATForm();
+
+	            // por POSICIÓN (1..17)
+	            f.setClaveHistorico(rs.getInt(1));
+	            f.setTipoDescarga(Utils.noNulo(rs.getString(2)));
+	            f.setTipoComprobando(Utils.noNulo(rs.getString(3)));
+	            f.setAccionSat(Utils.noNulo(rs.getString(4)));
+	            f.setSolicitudSat(Utils.noNulo(rs.getString(5)));
+	            f.setPaqueteSat(Utils.noNulo(rs.getString(6)));
+	            f.setFechaInicio(Utils.noNulo(rs.getString(7)));
+	            f.setFechaFin(Utils.noNulo(rs.getString(8)));
+	            f.setFechaDescarga(Utils.noNulo(rs.getString(9)));
+	            f.setEstatusDescarga(Utils.noNulo(rs.getString(10)));
+	            f.setMensajeSat(Utils.noNulo(rs.getString(11)));
+	            f.setTotalArchivos(rs.getInt(12));
+	            f.setArchivosExitosos(rs.getInt(13));
+	            f.setArchivosDuplicados(rs.getInt(14));
+	            f.setArchivosErrorRfc(rs.getInt(15));
+	            f.setArchivosNomina(rs.getInt(16));
+	            f.setEstatus(Utils.noNulo(rs.getString(17)));
+
+	            lista.add(f);
+	        }
+
+	        logger.info("consultarHistoricoMetadataHoy() TOTAL=" + lista.size());
+
+	    } catch (Exception e) {
+	        logger.error("consultarHistoricoMetadataHoy() ERROR", e);
+	    } finally {
+	        try { if (rs != null) rs.close(); } catch (Exception ignore) {}
+	        try { if (stmt != null) stmt.close(); } catch (Exception ignore) {}
+	    }
+
+	    return lista;
+	}
+
+
+
+
+
+
+
+
 }

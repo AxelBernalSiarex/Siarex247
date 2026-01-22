@@ -261,6 +261,18 @@
 
   }
   
+  function iniciarProcesoMetaData1(){
+	  if (getClase('btnProc10') == 'GREEN'){
+		  window.open('terminaProcesoMetaData.jsp','ocultoFrame');
+		  document.getElementById('btnProc10').className = 'RED';
+	  }else{
+		  window.open('iniciaProcesoMetaData.jsp','ocultoFrame');
+		  document.getElementById('btnProc10').className = 'GREEN';
+		  
+	  }
+	  
+  }
+  
   function muestraMensaje(mensaje){
 	  document.getElementById('txtMensaje').value = mensaje;
   }
@@ -278,6 +290,7 @@
 		  var bandBtn7 = '<%=mapaProceso.get("PROC_7")%>';
 		  var bandBtn11 = '<%=mapaProceso.get("PROC_11")%>';
 		  var bandBtn9 = '<%=mapaProceso.get("PROC_9")%>';
+		  var bandBtn10 = '<%=mapaProceso.get("PROC_10")%>';
 		  
 		  var bandBtn12 = '<%=mapaProceso.get("PROC_12")%>';
 		  var bandBtn13 = '<%=mapaProceso.get("PROC_13")%>';
@@ -361,6 +374,11 @@
 		  }else{
 			  document.getElementById('btnProc15').className = 'GREEN';
 		  }
+		  if (bandBtn10 == 'S'){
+			  document.getElementById('btnProc10').className = 'RED';			  
+		  }else{
+			  document.getElementById('btnProc10').className = 'GREEN';
+		  }
 		  
 
 	  }catch(e){
@@ -408,6 +426,8 @@
           <!-- 
               <input type="button" name="btnProc10" id="btnProc10" value="DESCARGA METADATA" onclick="iniciarProcesoMetaData();" class="GREEN">
             -->
+           <input type="button" name="btnProc10" id="btnProc10" value="DESCARGA METADATA" onclick="iniciarProcesoMetaData1();" class="GREEN">
+            
                
           </td>    
           <td width="25%" align="center">&nbsp;

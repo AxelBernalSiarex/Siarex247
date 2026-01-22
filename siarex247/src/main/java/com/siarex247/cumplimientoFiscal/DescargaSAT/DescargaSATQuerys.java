@@ -31,6 +31,42 @@ public class DescargaSATQuerys {
 	private static String consultarFechaMinimaEmitidos   =  "select min(FECHA_EMISION) from DESCARGA_MASIVA_METADATA_TIMBRADO where EMISOR_RFC = ? and EFECTO_COMPROBANTE not in (?)";	
 	private static String consultarFechaMinimaNomina  =  "select min(FECHA_EMISION) from DESCARGA_MASIVA_METADATA_TIMBRADO where EFECTO_COMPROBANTE = ?";
 	
+	// TEMPLATE (privado)
+	private static final String consultarHistoricoMetadataHoy =
+		    "SELECT " +
+		    "CLAVE_HISTORICO, TIPO_DESCARGA, TIPO_COMPROBANDO, ACCION_SAT, " +
+		    "SOLICITUD_SAT, PAQUETE_SAT, FECHA_INICIO, FECHA_FIN, FECHA_DESCARGA, " +
+		    "ESTATUS_DESCARGA, MENSAJE_SAT, TOTAL_ARCHIVOS, ARCHIVOS_EXITOSOS, " +
+		    "ARCHIVOS_DUPLICADOS, ARCHIVOS_ERROR_RFC, ARCHIVOS_NOMINA, ESTATUS " +
+		    "FROM `contrare_<<esquema>>`.`HISTORICO_PROCESO_SAT` " +
+		    "WHERE TRIM(TIPO_DESCARGA) = ? AND DATE(FECHA_DESCARGA) = CURDATE() " +
+		    "ORDER BY FECHA_DESCARGA DESC";
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+	// GET público
+	public static String getConsultarHistoricoMetadataHoy(String esquema) {
+	    return consultarHistoricoMetadataHoy.replace("<<esquema>>", esquema);
+	}
+
+
+
+
+
+
+
+
+
 	
 	public static String getDetalle(String esquema) {
 		return detalle.replaceAll("<<esquema>>", esquema);
@@ -95,6 +131,10 @@ public class DescargaSATQuerys {
 	public static String getConsultarFechaMinimaNomina(String esquema) {
 		return consultarFechaMinimaNomina.replaceAll("<<esquema>>", esquema);
 	}	
+	
+	
+
+
 	
 	
 }

@@ -71,7 +71,7 @@ public class MenusAction extends MenusSupport {
 			else{
 				rc = getConnection(session.getEsquemaEmpresa());
 				con = rc.getCon();
-				logger.info(con);
+				//logger.info(con);
 				
 				UsuariosForm usuariosForm = new UsuariosBean().datosUsuario(con, rc.getEsquema(), getUsuario(request));
 				listaOpciones = beanMenu.obtenerMenuPrincipal(con,rc.getEsquema(), session.getLenguaje(), usuariosForm.getIdPerfil());
