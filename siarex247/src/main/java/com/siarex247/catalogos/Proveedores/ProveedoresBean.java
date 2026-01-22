@@ -1396,6 +1396,35 @@ public class ProveedoresBean {
 
 	    return null;
 	}
+	
+	public boolean proveedorGeneraFacturaPorRazonSocial(
+	        Connection con,
+	        String esquema,
+	        String razonSocial) {
+
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
+
+	    try {
+	        String sql = ProveedoresQuerys.EXISTE_PROVEEDOR_GENERA_FACTURA_POR_RAZON
+	                .replace("<<esquema>>", esquema);
+
+	        ps = con.prepareStatement(sql);
+	        ps.setString(1, razonSocial);
+
+	        rs = ps.executeQuery();
+	        return rs.next(); // existe y genera factura
+
+	    } catch (Exception e) {
+	        Logger.getLogger("siarex247")
+	              .error("Error validando GENERA_FACTURA proveedor: " + razonSocial, e);
+	        return false;
+	    } finally {
+	        try { if (rs != null) rs.close(); } catch (Exception ignore) {}
+	        try { if (ps != null) ps.close(); } catch (Exception ignore) {}
+	    }
+	}
+
 
 
 

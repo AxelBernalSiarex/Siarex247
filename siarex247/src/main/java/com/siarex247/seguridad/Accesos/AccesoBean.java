@@ -572,5 +572,46 @@ public class AccesoBean {
 
 	    return empresa;
 	}
+	
+	public EmpresasForm consultaEmpresaPorRazonSocialAccesos(String razonSocial) {
+
+	    ResultadoConexion rc = null;
+	    Connection con = null;
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
+
+	    try {
+	        ConexionDB connPool = new ConexionDB();
+	        rc = connPool.getConnectionSiarex(); // 👈 siarex_accesos
+	        con = rc.getCon();
+
+	        ps = con.prepareStatement(
+	            AccesoQuerys.OBTENER_EMPRESA_POR_RAZON_SOCIAL
+	        );
+	        ps.setString(1, razonSocial);
+
+	        rs = ps.executeQuery();
+
+	        if (rs.next()) {
+	            EmpresasForm e = new EmpresasForm();
+	            e.setClaveEmpresa(rs.getInt(1));
+	            e.setNombreLargo(rs.getString(2));
+	            e.setRfc(rs.getString(3));
+	            e.setEstatus(rs.getString(4));
+	            e.setEsquema(rs.getString(5));
+	            return e;
+	        }
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    } finally {
+	        try { if (rs != null) rs.close(); } catch (Exception ignore) {}
+	        try { if (ps != null) ps.close(); } catch (Exception ignore) {}
+	        try { if (con != null) con.close(); } catch (Exception ignore) {}
+	    }
+
+	    return null;
+	}
+
 
 }

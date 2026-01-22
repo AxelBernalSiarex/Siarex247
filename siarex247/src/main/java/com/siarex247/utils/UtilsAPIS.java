@@ -24,7 +24,10 @@ public class UtilsAPIS {
 	//private static final String HOST_APIS_TIMBRADO = "https://siarex.com";
 	private static final String GENERAR_TOKEN = HOST_APIS_TIMBRADO + "/RestJR/services/LoginService/generarToken"; 
 	private static final String USER_TOKEN =  "timbrado.express@siarex.com";
-	 private static final String ENDPOINT_DOREGISTER =  HOST_APIS_TIMBRADO + "/timbradoLinea/rest/DoRegister/register";
+	 private static final String ENDPOINT_DOREGISTER =  HOST_APIS_TIMBRADO + "/timbradoLinea/services/DoRegister/register";
+	 private static final String ENDPOINT_DO_PURCHASE_GENERAR_FACTURA =
+		        HOST_APIS_TIMBRADO + "/timbradoLinea/services/DoPurchase/GenerarFactura";
+
 	
 	
 	public static final Logger logger = Logger.getLogger("siarex247");
@@ -150,5 +153,47 @@ public class UtilsAPIS {
 		}
 		return jsonRespuesta;
 	}
+	
+	/**
+	 * Llama al servicio DoPurchase/GenerarFactura.
+	 *
+	 * @param nombreEmpresa  Nombre de la empresa (ej. esquema o razón social)
+	 * @param numeroOrden    Número de orden de compra
+	 * @param token          Token Bearer válido
+	 * @return JSONObject con la respuesta del servicio o null si falla
+	 */
+	public static JSONObject generarFacturaDoPurchase(
+	        String nombreEmpresa,
+	        String numeroOrden,
+	        String token) {
+
+	    JSONObject jsonRespuesta = null;
+
+	    try {
+	        JSONObject jsonEnvio = new JSONObject();
+	        jsonEnvio.put("nombreEmpresa", nombreEmpresa);
+	        jsonEnvio.put("numeroOrden", numeroOrden);
+
+	        logger.info("📤 Enviando DoPurchase/GenerarFactura → "
+	                + "empresa=" + nombreEmpresa
+	                + " | orden=" + numeroOrden);
+
+	        String resApi = ejecutarApiToken(
+	                jsonEnvio,
+	                ENDPOINT_DO_PURCHASE_GENERAR_FACTURA,
+	                token
+	        );
+
+	        if (resApi != null && !resApi.trim().isEmpty()) {
+	            jsonRespuesta = new JSONObject(resApi);
+	        }
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("Error llamando DoPurchase/GenerarFactura", e);
+	    }
+
+	    return jsonRespuesta;
+	}
+
 		 
 }

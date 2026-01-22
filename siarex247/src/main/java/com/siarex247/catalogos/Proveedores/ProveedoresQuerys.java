@@ -47,6 +47,15 @@ public class ProveedoresQuerys {
 	    "WHERE UPPER(TRIM(RAZON_SOCIAL)) = UPPER(TRIM(?)) " +
 	    "AND ESTATUS_REGISTRO = 'A' " +
 	    "LIMIT 1";
+	
+	public static final String EXISTE_PROVEEDOR_GENERA_FACTURA_POR_RAZON =
+		    "SELECT 1 " +
+		    "FROM <<esquema>>.PROVEEDORES " +
+		    "WHERE UPPER(TRIM(RAZON_SOCIAL)) = UPPER(TRIM(?)) " +
+		    "AND GENERA_FACTURA = 'S' " +
+		    "AND ESTATUS_REGISTRO = 'A' " +
+		    "LIMIT 1";
+
 
 
 

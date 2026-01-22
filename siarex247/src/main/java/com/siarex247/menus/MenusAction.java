@@ -63,6 +63,7 @@ public class MenusAction extends MenusSupport {
 
 		try{
 			SiarexSession session = ObtenerSession.getSession(request);
+			
 
 			if ("".equals(session.getEsquemaEmpresa())){
 				return listaOpciones;
@@ -70,6 +71,8 @@ public class MenusAction extends MenusSupport {
 			else{
 				rc = getConnection(session.getEsquemaEmpresa());
 				con = rc.getCon();
+				logger.info(con);
+				
 				UsuariosForm usuariosForm = new UsuariosBean().datosUsuario(con, rc.getEsquema(), getUsuario(request));
 				listaOpciones = beanMenu.obtenerMenuPrincipal(con,rc.getEsquema(), session.getLenguaje(), usuariosForm.getIdPerfil());
 			}

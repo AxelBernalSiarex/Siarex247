@@ -22,6 +22,14 @@ public class AccesoQuerys {
 		    "FROM EMPRESAS " +
 		    "WHERE TRIM(NOMBRE_LARGO) = TRIM(?) " +
 		    "AND ESTATUS = 'A'";
+	
+	public static final String OBTENER_EMPRESA_POR_RAZON_SOCIAL =
+		    "SELECT CLAVE_EMPRESA, NOMBRE_LARGO, RFC, ESTATUS, ESQUEMA " +
+		    "FROM EMPRESAS " +
+		    "WHERE UPPER(TRIM(NOMBRE_LARGO)) = UPPER(TRIM(?)) " +
+		    "AND ESTATUS = 'A' " +
+		    "LIMIT 1";
+
 
 
 

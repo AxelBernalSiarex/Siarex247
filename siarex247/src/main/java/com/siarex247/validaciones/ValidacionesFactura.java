@@ -1010,9 +1010,10 @@ public class ValidacionesFactura {
 			  
 			  boolean bandValidaCierre = true;
 			  logger.info("VALIDAR_CIERRE_ADMIN==>"+VALIDAR_CIERRE_ADMIN);
-			  if (idPerfil == 1 && "N".equalsIgnoreCase(VALIDAR_CIERRE_ADMIN)) {
-				  bandValidaCierre = false;  
-			  }
+			  if ((idPerfil == 1 || idPerfil == 4) 
+					    && "N".equalsIgnoreCase(VALIDAR_CIERRE_ADMIN)) {
+					    bandValidaCierre = false;
+					}
 			  logger.info("bandValidaCierre===>"+bandValidaCierre);
 			  String factura = SERIE_FINAL;			  
 			  logger.info("cumpleHasta===>"+cumpleHasta);

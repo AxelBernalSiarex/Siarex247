@@ -6,6 +6,7 @@ public class DoRegisterModel {
 
     private String rfcCliente;
     private String razonSocial;
+    
     private String rfcProveedor;
     private String claveProducto;
     private BigDecimal monto;
