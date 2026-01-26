@@ -1437,12 +1437,64 @@ public String consultarFechaMinimaNomina(Connection con, String esquema) {
 
 	    return lista;
 	}
+	
+	public int actualizarHistoricoSolicitudSat(Connection con, String esquema,
+	        int claveHistorico, String accionSat, String idSolicitud,
+	        String estatusDescarga, String mensajeSat) {
 
+	    PreparedStatement stmt = null;
+	    try {
+	        String sql = DescargaSATQuerys.getActualizarHistoricoSolicitudSat(esquema);
+	        stmt = con.prepareStatement(sql);
 
+	        // defensivo: limitar mensaje por si la columna es corta
+	        String msg = Utils.noNulo(mensajeSat);
+	        if (msg.length() > 500) msg = msg.substring(0, 500);
 
+	        stmt.setString(1, Utils.noNulo(accionSat));
+	        stmt.setString(2, Utils.noNulo(idSolicitud));
+	        stmt.setString(3, Utils.noNulo(estatusDescarga)); // "SOL"
+	        stmt.setString(4, msg);
+	        stmt.setInt(5, claveHistorico);
 
+	        int rows = stmt.executeUpdate();
+	        logger.info("actualizarHistoricoSolicitudSat rows=" + rows + " id=" + claveHistorico + " esquema=" + esquema);
+	        return rows;
 
+	    } catch (Exception e) {
+	        logger.error("actualizarHistoricoSolicitudSat ERROR id=" + claveHistorico + " esquema=" + esquema, e);
+	        return 0;
+	    } finally {
+	        try { if (stmt != null) stmt.close(); } catch (Exception ignore) {}
+	    }
+	}
 
+	public int actualizarHistoricoErrorSat(Connection con, String esquema,
+	        int claveHistorico, String estatusDescarga, String mensajeSat) {
+
+	    PreparedStatement stmt = null;
+	    try {
+	        String sql = DescargaSATQuerys.getActualizarHistoricoErrorSat(esquema);
+	        stmt = con.prepareStatement(sql);
+
+	        String msg = Utils.noNulo(mensajeSat);
+	        if (msg.length() > 500) msg = msg.substring(0, 500);
+
+	        stmt.setString(1, Utils.noNulo(estatusDescarga)); // "ERR"
+	        stmt.setString(2, msg);
+	        stmt.setInt(3, claveHistorico);
+
+	        int rows = stmt.executeUpdate();
+	        logger.info("actualizarHistoricoErrorSat rows=" + rows + " id=" + claveHistorico + " esquema=" + esquema);
+	        return rows;
+
+	    } catch (Exception e) {
+	        logger.error("actualizarHistoricoErrorSat ERROR id=" + claveHistorico + " esquema=" + esquema, e);
+	        return 0;
+	    } finally {
+	        try { if (stmt != null) stmt.close(); } catch (Exception ignore) {}
+	    }
+	}
 
 
 }

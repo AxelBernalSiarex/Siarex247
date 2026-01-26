@@ -42,32 +42,21 @@ public class DescargaSATQuerys {
 		    "WHERE TRIM(TIPO_DESCARGA) = ? AND DATE(FECHA_DESCARGA) = CURDATE() " +
 		    "ORDER BY FECHA_DESCARGA DESC";
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	// UPDATE: cuando SAT aceptó (guardar idSolicitud y estatus SOL)
+	private static final String actualizarHistoricoSolicitudSat =
+	    "UPDATE `contrare_<<esquema>>`.`HISTORICO_PROCESO_SAT` " +
+	    "SET ACCION_SAT = ?, SOLICITUD_SAT = ?, ESTATUS_DESCARGA = ?, MENSAJE_SAT = ?, " +
+	    "FECHA_FIN = CURRENT_TIMESTAMP, FECHA_DESCARGA = CURDATE() " +
+	    "WHERE CLAVE_HISTORICO = ?";
+
+	// UPDATE: cuando hay error (estatus ERR + mensaje)
+	private static final String actualizarHistoricoErrorSat =
+	    "UPDATE `contrare_<<esquema>>`.`HISTORICO_PROCESO_SAT` " +
+	    "SET ESTATUS_DESCARGA = ?, MENSAJE_SAT = ?, " +
+	    "FECHA_FIN = CURRENT_TIMESTAMP, FECHA_DESCARGA = CURDATE() " +
+	    "WHERE CLAVE_HISTORICO = ?";
 
 
-	// GET público
-	public static String getConsultarHistoricoMetadataHoy(String esquema) {
-	    return consultarHistoricoMetadataHoy.replace("<<esquema>>", esquema);
-	}
-
-
-
-
-
-
-
-
-
-	
 	public static String getDetalle(String esquema) {
 		return detalle.replaceAll("<<esquema>>", esquema);
 	}	
@@ -131,6 +120,20 @@ public class DescargaSATQuerys {
 	public static String getConsultarFechaMinimaNomina(String esquema) {
 		return consultarFechaMinimaNomina.replaceAll("<<esquema>>", esquema);
 	}	
+	
+	public static String getActualizarHistoricoSolicitudSat(String esquema) {
+	    return actualizarHistoricoSolicitudSat.replace("<<esquema>>", esquema);
+	}
+
+	public static String getActualizarHistoricoErrorSat(String esquema) {
+	    return actualizarHistoricoErrorSat.replace("<<esquema>>", esquema);
+	}
+
+	// GET público
+	public static String getConsultarHistoricoMetadataHoy(String esquema) {
+	    return consultarHistoricoMetadataHoy.replace("<<esquema>>", esquema);
+	}
+
 	
 	
 
