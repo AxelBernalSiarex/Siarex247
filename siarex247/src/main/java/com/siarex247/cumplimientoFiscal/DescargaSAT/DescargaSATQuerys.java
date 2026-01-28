@@ -55,6 +55,54 @@ public class DescargaSATQuerys {
 	    "SET ESTATUS_DESCARGA = ?, MENSAJE_SAT = ?, " +
 	    "FECHA_FIN = CURRENT_TIMESTAMP, FECHA_DESCARGA = CURDATE() " +
 	    "WHERE CLAVE_HISTORICO = ?";
+	
+	// UPDATE: guardar paquete + estatus (SOL/MET/ERR) + mensaje
+	private static final String actualizarHistoricoPaqueteSat =
+	    "UPDATE `contrare_<<esquema>>`.`HISTORICO_PROCESO_SAT` " +
+	    "SET ACCION_SAT = ?, PAQUETE_SAT = ?, ESTATUS_DESCARGA = ?, MENSAJE_SAT = ?, " +
+	    "FECHA_FIN = CURRENT_TIMESTAMP, FECHA_DESCARGA = CURDATE() " +
+	    "WHERE CLAVE_HISTORICO = ?";
+
+	public static String getExisteUUID1(String esquema) {
+	    String db = dbContrare(esquema);
+	    return "SELECT IFNULL(ID_REGISTRO,0) AS ID_REGISTRO "
+	         + "FROM `" + db + "`.`descarga_masiva_metadata_timbrado` "
+	         + "WHERE UUID = ? LIMIT 1";
+	}
+
+	public static String getGuardarMetadataTimbrado1(String esquema) {
+	    String db = dbContrare(esquema);
+	    return "INSERT INTO `" + db + "`.`descarga_masiva_metadata_timbrado` "
+	         + "(UUID, EMISOR_RFC, EMISOR_NOMBRE, RECEPTOR_RFC, RECEPTOR_NOMBRE, RECEPTOR_PAC, "
+	         + " FECHA_EMISION, FECHA_CERTIFICACION, MONTO, EFECTO_COMPROBANTE, TIPO_MONEDA, ESTATUS, "
+	         + " FECHA_CANCELACION, EXISTE_BOVEDA, USUARIO_TRAN) "
+	         + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	}
+	
+	// NUEVA: export por rango FI/FF y por RFC (emisor o receptor)
+	// NUEVA: export por FECHA_TRANS (lo cargado en la corrida) y por RFC (emisor o receptor)
+	private static final String detalleExportarCSVPorTransRango =
+	    "SELECT ID_REGISTRO, UUID, EMISOR_RFC, EMISOR_NOMBRE, RECEPTOR_RFC, RECEPTOR_NOMBRE, " +
+	    "RECEPTOR_PAC, FECHA_EMISION, FECHA_CERTIFICACION, MONTO, EFECTO_COMPROBANTE, " +
+	    "TIPO_MONEDA, ESTATUS, FECHA_CANCELACION, EXISTE_BOVEDA, FECHA_TRANS " +
+	    "FROM `contrare_<<esquema>>`.`descarga_masiva_metadata_timbrado` " +
+	    "WHERE FECHA_TRANS BETWEEN ? AND ? " +
+	    "  AND (EMISOR_RFC = ? OR RECEPTOR_RFC = ?) ";
+
+	public static String getDetalleExportarCSVPorTransRango(String esquema) {
+	    return detalleExportarCSVPorTransRango.replace("<<esquema>>", esquema);
+	}
+
+
+	
+	
+
+
+	public static String getActualizarHistoricoPaqueteSat(String esquema) {
+	    return actualizarHistoricoPaqueteSat.replace("<<esquema>>", esquema);
+	}
+
+
 
 
 	public static String getDetalle(String esquema) {
@@ -133,6 +181,15 @@ public class DescargaSATQuerys {
 	public static String getConsultarHistoricoMetadataHoy(String esquema) {
 	    return consultarHistoricoMetadataHoy.replace("<<esquema>>", esquema);
 	}
+	
+	private static String dbContrare(String esquema) {
+	    String e = (esquema == null ? "" : esquema.trim());
+	    if (e.toLowerCase().startsWith("contrare_")) return e;   // por si algún día ya viene con prefijo
+	    return "contrare_" + e.toLowerCase();
+	}
+	
+
+	
 
 	
 	

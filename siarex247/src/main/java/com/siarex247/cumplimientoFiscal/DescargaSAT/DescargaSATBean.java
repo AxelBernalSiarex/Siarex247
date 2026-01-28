@@ -1495,6 +1495,196 @@ public String consultarFechaMinimaNomina(Connection con, String esquema) {
 	        try { if (stmt != null) stmt.close(); } catch (Exception ignore) {}
 	    }
 	}
+	
+	public int actualizarHistoricoPaqueteSat(Connection con, String esquema, int claveHistorico,
+	        String accionSat, String paqueteSat, String estatusDescarga, String mensajeSat) {
+
+	    PreparedStatement stmt = null;
+	    try {
+	        String sql = DescargaSATQuerys.getActualizarHistoricoPaqueteSat(esquema);
+	        stmt = con.prepareStatement(sql);
+
+	        String msg = Utils.noNulo(mensajeSat);
+	        if (msg.length() > 500) msg = msg.substring(0, 500);
+
+	        stmt.setString(1, Utils.noNulo(accionSat));
+	        stmt.setString(2, Utils.noNulo(paqueteSat));
+	        stmt.setString(3, Utils.noNulo(estatusDescarga));
+	        stmt.setString(4, msg);
+	        stmt.setInt(5, claveHistorico);
+
+	        return stmt.executeUpdate();
+
+	    } catch (Exception e) {
+	        logger.error("actualizarHistoricoPaqueteSat() ERROR id=" + claveHistorico + " esquema=" + esquema, e);
+	        return 0;
+	    } finally {
+	        try { if (stmt != null) stmt.close(); } catch (Exception ignore) {}
+	    }
+	}
+	
+	// ============================================================
+	// === DESCARGA_MASIVA_METADATA_TIMBRADO ======================
+	// ============================================================
+
+	/** Regresa ID_REGISTRO si existe el UUID, 0 si no existe */
+	public int existeUuidMetadataTimbrado(Connection con, String esquema, String uuid) {
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    int id = 0;
+
+	    try {
+	        stmt = con.prepareStatement(DescargaSATQuerys.getExisteUUID1(esquema));
+	        stmt.setString(1, Utils.noNulo(uuid).trim());
+	        rs = stmt.executeQuery();
+	        if (rs.next()) id = rs.getInt("ID_REGISTRO");
+	    } catch (Exception e) {
+	        Utils.imprimeLog("existeUuidMetadataTimbrado", e);
+	    } finally {
+	        try { if (rs != null) rs.close(); } catch (Exception ignore) {}
+	        try { if (stmt != null) stmt.close(); } catch (Exception ignore) {}
+	    }
+	    return id;
+	}
+
+	/** Inserta un registro (recomendado validar antes con existeUuidMetadataTimbrado) */
+	public int guardarMetadataTimbrado(
+	        Connection con, String esquema,
+	        String uuid,
+	        String emisorRfc, String emisorNombre,
+	        String receptorRfc, String receptorNombre,
+	        String receptorPac,
+	        java.sql.Timestamp fechaEmision,
+	        java.sql.Date fechaCertificacion,
+	        double monto,
+	        String efectoComprobante,
+	        String tipoMoneda,
+	        String estatus,
+	        java.sql.Timestamp fechaCancelacion,
+	        String existeBoveda,
+	        String usuarioTran
+	) {
+	    PreparedStatement stmt = null;
+	    int rows = 0;
+
+	    try {
+	    	
+	        stmt = con.prepareStatement(DescargaSATQuerys.getGuardarMetadataTimbrado1(esquema));
+	       // logger.info("Entro a  "+stmt);
+	        int i = 1;
+
+	        stmt.setString(i++, Utils.noNulo(uuid));
+	        stmt.setString(i++, Utils.noNulo(emisorRfc));
+	        stmt.setString(i++, Utils.noNulo(emisorNombre));
+	        stmt.setString(i++, Utils.noNulo(receptorRfc));
+	        stmt.setString(i++, Utils.noNulo(receptorNombre));
+	        stmt.setString(i++, Utils.noNulo(receptorPac));
+
+	        if (fechaEmision != null) stmt.setTimestamp(i++, fechaEmision);
+	        else stmt.setNull(i++, java.sql.Types.TIMESTAMP);
+
+	        if (fechaCertificacion != null) stmt.setDate(i++, fechaCertificacion);
+	        else stmt.setNull(i++, java.sql.Types.DATE);
+
+	        stmt.setDouble(i++, monto);
+
+	        stmt.setString(i++, Utils.noNulo(efectoComprobante));
+	        stmt.setString(i++, Utils.noNulo(tipoMoneda));
+	        stmt.setString(i++, Utils.noNulo(estatus));
+
+	        if (fechaCancelacion != null) stmt.setTimestamp(i++, fechaCancelacion);
+	        else stmt.setNull(i++, java.sql.Types.TIMESTAMP);
+
+	        stmt.setString(i++, Utils.noNulo(existeBoveda)); // ej. "N"
+	        stmt.setString(i++, Utils.noNulo(usuarioTran));  // ej. "SAT-MASIVA"
+
+	        rows = stmt.executeUpdate();
+	    } catch (Exception e) {
+	        Utils.imprimeLog("guardarMetadataTimbrado", e);
+	    } finally {
+	        try { if (stmt != null) stmt.close(); } catch (Exception ignore) {}
+	    }
+
+	    return rows;
+	}
+	
+	public ArrayList<String> exportarCSVPorTransRango(
+	        Connection con,
+	        String esquema,
+	        java.sql.Timestamp fechaIni,
+	        java.sql.Timestamp fechaFin,
+	        String rfcEmpresa,
+	        String existeBoveda // "N" o "ALL"
+	) {
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    ArrayList<String> listaTXT = new ArrayList<>();
+	    java.text.DecimalFormat decimal = new java.text.DecimalFormat("###,###.##");
+
+	    String header = "UUID|RFC EMISOR|RAZON SOCIAL EMISOR|RFC RECEPTOR|RAZON SOCIAL RECEPTOR|PAC EMISOR|"
+	            + "FECHA EMISION|FECHA CERTIFICACION|MONTO|EFECTO COMPROBANTE|TIPO MONEDA|ESTATUS|FECHA CANCELACION|EXISTE EN BOVEDA|FECHA TRANS";
+
+	    try {
+	        StringBuilder sb = new StringBuilder();
+	        sb.append(DescargaSATQuerys.getDetalleExportarCSVPorTransRango(esquema));
+
+	        if (!"ALL".equalsIgnoreCase(existeBoveda)) {
+	            sb.append(" AND EXISTE_BOVEDA = ? ");
+	        }
+
+	        // OJO: soporta históricos con ESTATUS='1'
+	        sb.append(" AND (ESTATUS = 'VIGENTE' OR ESTATUS = '1') ");
+	        sb.append(" ORDER BY FECHA_TRANS ");
+
+	        stmt = con.prepareStatement(sb.toString());
+
+	        int p = 1;
+	        stmt.setTimestamp(p++, fechaIni);
+	        stmt.setTimestamp(p++, fechaFin);
+	        stmt.setString(p++, rfcEmpresa);
+	        stmt.setString(p++, rfcEmpresa);
+
+	        if (!"ALL".equalsIgnoreCase(existeBoveda)) {
+	            stmt.setString(p++, existeBoveda);
+	        }
+
+	        rs = stmt.executeQuery();
+	        listaTXT.add(header);
+
+	        while (rs.next()) {
+	            StringBuilder ln = new StringBuilder();
+	            ln.append(Utils.noNuloNormal(rs.getString(2))).append("|");  // UUID
+	            ln.append(Utils.noNuloNormal(rs.getString(3))).append("|");  // EMISOR_RFC
+	            ln.append(Utils.noNuloNormal(rs.getString(4))).append("|");  // EMISOR_NOMBRE
+	            ln.append(Utils.noNuloNormal(rs.getString(5))).append("|");  // RECEPTOR_RFC
+	            ln.append(Utils.noNuloNormal(rs.getString(6))).append("|");  // RECEPTOR_NOMBRE
+	            ln.append(Utils.noNuloNormal(rs.getString(7))).append("|");  // RECEPTOR_PAC
+	            ln.append(Utils.noNuloNormal(rs.getString(8))).append("|");  // FECHA_EMISION
+	            ln.append(Utils.noNuloNormal(rs.getString(9))).append("|");  // FECHA_CERTIFICACION
+	            ln.append(decimal.format(rs.getDouble(10))).append("|");     // MONTO
+	            ln.append(Utils.noNuloNormal(rs.getString(11))).append("|"); // EFECTO
+	            ln.append(Utils.noNuloNormal(rs.getString(12))).append("|"); // TIPO_MONEDA
+	            ln.append(Utils.noNuloNormal(rs.getString(13))).append("|"); // ESTATUS
+	            ln.append(Utils.noNuloNormal(rs.getString(14))).append("|"); // FECHA_CANCELACION
+	            ln.append(Utils.noNuloNormal(rs.getString(15))).append("|"); // EXISTE_BOVEDA
+	            ln.append(Utils.noNuloNormal(rs.getString(16)));             // FECHA_TRANS
+
+	            listaTXT.add(ln.toString());
+	        }
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("exportarCSVPorTransRango", e);
+	    } finally {
+	        try { if (rs != null) rs.close(); } catch (Exception ignore) {}
+	        try { if (stmt != null) stmt.close(); } catch (Exception ignore) {}
+	    }
+
+	    return listaTXT;
+	}
+
+
+
+
 
 
 }
