@@ -1438,6 +1438,52 @@ public String consultarFechaMinimaNomina(Connection con, String esquema) {
 	    return lista;
 	}
 	
+	public ArrayList<HistoricoProcesoSATForm> consultarHistoricoMetadataPendientes(Connection con, String esquema) {
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    ArrayList<HistoricoProcesoSATForm> lista = new ArrayList<>();
+	    HistoricoProcesoSATForm form = new HistoricoProcesoSATForm();
+
+	    try {
+	        stmt = con.prepareStatement(DescargaSATQuerys.getConsultarHistoricoMetadataPendientes(esquema));
+	        stmt.setString(1, "METADATA"); // mismo tipo que usas hoy
+
+	        rs = stmt.executeQuery();
+	        while (rs.next()) {
+	            form.setClaveHistorico(rs.getInt(1));
+	            form.setTipoDescarga(Utils.noNulo(rs.getString(2)));
+	            form.setTipoComprobando(Utils.noNulo(rs.getString(3)));
+	            form.setAccionSat(Utils.noNulo(rs.getString(4)));
+	            form.setSolicitudSat(Utils.noNulo(rs.getString(5)));
+	            form.setPaqueteSat(Utils.noNulo(rs.getString(6)));
+	            form.setFechaInicio(Utils.noNulo(rs.getString(7)));
+	            form.setFechaFin(Utils.noNulo(rs.getString(8)));
+	            form.setFechaDescarga(Utils.noNulo(rs.getString(9)));
+	            form.setEstatusDescarga(Utils.noNulo(rs.getString(10)));
+	            form.setMensajeSat(Utils.noNulo(rs.getString(11)));
+
+	            form.setTotalArchivos(rs.getInt(12));
+	            form.setArchivosExitosos(rs.getInt(13));
+	            form.setArchivosDuplicados(rs.getInt(14));
+	            form.setArchivosErrorRfc(rs.getInt(15));
+	            form.setArchivosNomina(rs.getInt(16));
+
+	            form.setEstatus(Utils.noNulo(rs.getString(17)));
+
+	            lista.add(form);
+	            form = new HistoricoProcesoSATForm();
+	        }
+
+	    } catch (Exception e) {
+	        Utils.imprimeLog("consultarHistoricoMetadataPendientes()", e);
+	    } finally {
+	        try { if (rs != null) rs.close(); } catch (Exception ignore) {}
+	        try { if (stmt != null) stmt.close(); } catch (Exception ignore) {}
+	    }
+	    return lista;
+	}
+
+	
 	public int actualizarHistoricoSolicitudSat(Connection con, String esquema,
 	        int claveHistorico, String accionSat, String idSolicitud,
 	        String estatusDescarga, String mensajeSat) {
@@ -1622,19 +1668,20 @@ public String consultarFechaMinimaNomina(Connection con, String esquema) {
 	    java.text.DecimalFormat decimal = new java.text.DecimalFormat("###,###.##");
 
 	    String header = "UUID|RFC EMISOR|RAZON SOCIAL EMISOR|RFC RECEPTOR|RAZON SOCIAL RECEPTOR|PAC EMISOR|"
-	            + "FECHA EMISION|FECHA CERTIFICACION|MONTO|EFECTO COMPROBANTE|TIPO MONEDA|ESTATUS|FECHA CANCELACION|EXISTE EN BOVEDA|FECHA TRANS";
+	            + "FECHA EMISION|FECHA CERTIFICACION|MONTO|EFECTO COMPROBANTE|TIPO MONEDA|ESTATUS|FECHA CANCELACION|EXISTE EN BOVEDA";
 
 	    try {
 	        StringBuilder sb = new StringBuilder();
 	        sb.append(DescargaSATQuerys.getDetalleExportarCSVPorTransRango(esquema));
 
+	        // Misma lógica que ya traes: solo VIGENTE y (opcional) EXISTE_BOVEDA
 	        if (!"ALL".equalsIgnoreCase(existeBoveda)) {
-	            sb.append(" AND EXISTE_BOVEDA = ? ");
+	            sb.append(" AND EXISTE_BOVEDA = ? AND ESTATUS = ? ");
+	        } else {
+	            sb.append(" AND ESTATUS = ? ");
 	        }
 
-	        // OJO: soporta históricos con ESTATUS='1'
-	        sb.append(" AND (ESTATUS = 'VIGENTE' OR ESTATUS = '1') ");
-	        sb.append(" ORDER BY FECHA_TRANS ");
+	        sb.append(" ORDER BY FECHA_TRANS "); // para ver lo insertado en orden
 
 	        stmt = con.prepareStatement(sb.toString());
 
@@ -1646,6 +1693,9 @@ public String consultarFechaMinimaNomina(Connection con, String esquema) {
 
 	        if (!"ALL".equalsIgnoreCase(existeBoveda)) {
 	            stmt.setString(p++, existeBoveda);
+	            stmt.setString(p++, "VIGENTE");
+	        } else {
+	            stmt.setString(p++, "VIGENTE");
 	        }
 
 	        rs = stmt.executeQuery();
@@ -1666,8 +1716,7 @@ public String consultarFechaMinimaNomina(Connection con, String esquema) {
 	            ln.append(Utils.noNuloNormal(rs.getString(12))).append("|"); // TIPO_MONEDA
 	            ln.append(Utils.noNuloNormal(rs.getString(13))).append("|"); // ESTATUS
 	            ln.append(Utils.noNuloNormal(rs.getString(14))).append("|"); // FECHA_CANCELACION
-	            ln.append(Utils.noNuloNormal(rs.getString(15))).append("|"); // EXISTE_BOVEDA
-	            ln.append(Utils.noNuloNormal(rs.getString(16)));             // FECHA_TRANS
+	            ln.append(Utils.noNuloNormal(rs.getString(15)));             // EXISTE_BOVEDA
 
 	            listaTXT.add(ln.toString());
 	        }
@@ -1681,6 +1730,7 @@ public String consultarFechaMinimaNomina(Connection con, String esquema) {
 
 	    return listaTXT;
 	}
+
 
 
 

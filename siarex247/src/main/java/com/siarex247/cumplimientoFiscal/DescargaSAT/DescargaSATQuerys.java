@@ -42,6 +42,24 @@ public class DescargaSATQuerys {
 		    "WHERE TRIM(TIPO_DESCARGA) = ? AND DATE(FECHA_DESCARGA) = CURDATE() " +
 		    "ORDER BY FECHA_DESCARGA DESC";
 	
+	// Pendientes: no depende de CURDATE(), permite continuar lo de ayer
+	private static final String consultarHistoricoMetadataPendientes =
+	    "SELECT " +
+	    "CLAVE_HISTORICO, TIPO_DESCARGA, TIPO_COMPROBANDO, ACCION_SAT, " +
+	    "SOLICITUD_SAT, PAQUETE_SAT, FECHA_INICIO, FECHA_FIN, FECHA_DESCARGA, " +
+	    "ESTATUS_DESCARGA, MENSAJE_SAT, TOTAL_ARCHIVOS, ARCHIVOS_EXITOSOS, " +
+	    "ARCHIVOS_DUPLICADOS, ARCHIVOS_ERROR_RFC, ARCHIVOS_NOMINA, ESTATUS " +
+	    "FROM `contrare_<<esquema>>`.`HISTORICO_PROCESO_SAT` " +
+	    "WHERE TRIM(TIPO_DESCARGA) = ? " +
+	    "  AND TRIM(ESTATUS_DESCARGA) IN ('INI','SOL','MET','NOT') " +
+	    "  AND FECHA_DESCARGA >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) " +
+	    "ORDER BY FECHA_DESCARGA DESC, CLAVE_HISTORICO DESC";
+
+	public static String getConsultarHistoricoMetadataPendientes(String esquema) {
+	    return consultarHistoricoMetadataPendientes.replace("<<esquema>>", esquema);
+	}
+
+	
 	// UPDATE: cuando SAT aceptó (guardar idSolicitud y estatus SOL)
 	private static final String actualizarHistoricoSolicitudSat =
 	    "UPDATE `contrare_<<esquema>>`.`HISTORICO_PROCESO_SAT` " +
@@ -81,17 +99,19 @@ public class DescargaSATQuerys {
 	
 	// NUEVA: export por rango FI/FF y por RFC (emisor o receptor)
 	// NUEVA: export por FECHA_TRANS (lo cargado en la corrida) y por RFC (emisor o receptor)
+	// NUEVA: export CSV por rango de FECHA_TRANS (corrida) y por RFC (emisor o receptor)
 	private static final String detalleExportarCSVPorTransRango =
 	    "SELECT ID_REGISTRO, UUID, EMISOR_RFC, EMISOR_NOMBRE, RECEPTOR_RFC, RECEPTOR_NOMBRE, " +
 	    "RECEPTOR_PAC, FECHA_EMISION, FECHA_CERTIFICACION, MONTO, EFECTO_COMPROBANTE, " +
-	    "TIPO_MONEDA, ESTATUS, FECHA_CANCELACION, EXISTE_BOVEDA, FECHA_TRANS " +
+	    "TIPO_MONEDA, ESTATUS, FECHA_CANCELACION, EXISTE_BOVEDA " +
 	    "FROM `contrare_<<esquema>>`.`descarga_masiva_metadata_timbrado` " +
-	    "WHERE FECHA_TRANS BETWEEN ? AND ? " +
+	    "WHERE FECHA_TRANS BETWEEN ? AND ? " +   // <-- OJO: FECHA_TRANS
 	    "  AND (EMISOR_RFC = ? OR RECEPTOR_RFC = ?) ";
 
 	public static String getDetalleExportarCSVPorTransRango(String esquema) {
 	    return detalleExportarCSVPorTransRango.replace("<<esquema>>", esquema);
 	}
+
 
 
 	

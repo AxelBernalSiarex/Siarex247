@@ -55,6 +55,14 @@ import Models.TipoSolicitud;
 
 import Models.SolicitaDescargaEmitidosParser;
 
+import Models.SolicitaDescargaRecibidos;
+import Models.SolicitaDescargaRecibidosResponse;
+import Models.SolicitaDescargaRecibidosParser;
+
+import Models.SolicitaDescargaFolio;
+import Models.SolicitaDescargaFolioResponse;
+import Models.SolicitaDescargaFolioParser;
+
 import Models.VerificaSolicitudRequest;
 import Models.VerificaSolicitudResponse;
 import Models.VerificaSolicitudParser;
@@ -89,6 +97,15 @@ public class monitorDescargaMasivaSat {
     }
 
     // ====== Resultados parsing ======
+
+    // ====== Resultado solicitud SAT (Accion 1) ======
+    private static class SatSolicitudResult {
+        String tipo = "";      // EMITIDOS | RECIBIDOS | FOLIO
+        String codEstatus = "";
+        String mensaje = "";
+        String idSolicitud = "";
+    }
+
     private static class ParseResult {
         int total = 0;
         int insertados = 0;
@@ -133,7 +150,7 @@ public class monitorDescargaMasivaSat {
 
                 logger.info("Metadata HOY total=" + (historicoHoy == null ? 0 : historicoHoy.size()));
 
-                // ===== 3) INI -> ACCION 1 (Solicitar) =====
+                // ===== 3) INI -> ACCION 1/2/3 (Solicitar) =====
                 ArrayList<HistoricoProcesoSATForm> historicoIni =
                         filtrarPorEstatus(historicoHoy, "INI");
 
@@ -145,23 +162,25 @@ public class monitorDescargaMasivaSat {
                     String ffStr = Utils.noNulo(h.getFechaFin());
 
                     logger.info("INI -> ID=" + h.getClaveHistorico()
+                            + " TIPO_COMP=" + Utils.noNulo(h.getTipoComprobando())
                             + " FI=" + fiStr
                             + " FF=" + ffStr
                             + " SOL=" + h.getSolicitudSat()
                             + " PAQ=" + h.getPaqueteSat()
                             + " EST_DESC=" + h.getEstatusDescarga()
-                            + " FECHA=" + h.getFechaDescarga());
+                            + " FECHA=" + h.getFechaDescarga()
+                            + " MSG=" + Utils.noNulo(h.getMensajeSat()));
 
-                    SolicitaDescargaEmitidosResponse resp =
-                            ejecutarSolicitudSATAccion1EmitidosMetadata(empresa, fiStr, ffStr);
+                    SatSolicitudResult resp = ejecutarSolicitudSATAccion1(empresa, h);
+                    
 
                     // === Persistir resultado en HISTORICO_PROCESO_SAT ===
                     actualizarHistoricoAccion1(bean, empresa.getEsquema(), h.getClaveHistorico(), resp);
 
                     if (resp != null) {
-                        logger.info("RESP SAT (ACCION=1) -> codigoEstatus=" + resp.getCodEstatus()
-                                + " mensaje=" + resp.getMensaje()
-                                + " idSolicitud=" + resp.getIdSolicitud());
+                        logger.info("RESP SAT (ACCION=1) [" + Utils.noNulo(resp.tipo) + "] -> codigoEstatus=" + Utils.noNulo(resp.codEstatus)
+                                + " mensaje=" + Utils.noNulo(resp.mensaje)
+                                + " idSolicitud=" + Utils.noNulo(resp.idSolicitud));
                     } else {
                         logger.info("RESP SAT (ACCION=1) -> null");
                     }
@@ -744,7 +763,7 @@ public class monitorDescargaMasivaSat {
         String pathCSV = "";
         try {
             // "N" = no encontrado en boveda (si tu Bean lo usa igual)
-        	ArrayList<String> lines = bean.exportarCSVPorTransRango(con, esquema, fi, ff, Utils.noNulo(empresa.getRfc()), "N");
+            ArrayList<String> lines = bean.exportarCSVPorTransRango(con, esquema, fi, ff, Utils.noNulo(empresa.getRfc()), "N");
 
             if (lines == null || lines.size() <= 1) {
                 return "";
@@ -823,20 +842,23 @@ public class monitorDescargaMasivaSat {
                 return lista;
             }
 
-            lista = bean.consultarHistoricoMetadataHoy(con, esquema);
+            // lista = bean.consultarHistoricoMetadataHoy(con, esquema);
+            lista = bean.consultarHistoricoMetadataPendientes(con, esquema);
 
             int total = (lista == null ? 0 : lista.size());
-            logger.info("Histórico Metadata HOY - total registros: " + total);
+            logger.info("Histórico Metadata PENDIENTE (ult 7 días) - total registros: " + total);
 
             if (lista != null) {
                 for (HistoricoProcesoSATForm h : lista) {
                     logger.info("ID=" + h.getClaveHistorico()
+                            + " TIPO_COMP=" + Utils.noNulo(h.getTipoComprobando())
                             + " SOL=" + h.getSolicitudSat()
                             + " PAQ=" + h.getPaqueteSat()
                             + " EST_DESC=" + h.getEstatusDescarga()
                             + " EST=" + h.getEstatus()
                             + " FI=" + h.getFechaInicio()
-                            + " FF=" + h.getFechaFin());
+                            + " FF=" + h.getFechaFin()
+                            + " MSG=" + Utils.noNulo(h.getMensajeSat()));
                 }
             }
 
@@ -870,27 +892,67 @@ public class monitorDescargaMasivaSat {
     // ====================== ACCION 1 (SOL) ======================
     // ============================================================
 
-    private SolicitaDescargaEmitidosResponse ejecutarSolicitudSATAccion1EmitidosMetadata(
+    /**
+     * ACCION 1: Solicitud al SAT.
+     * Soporta:
+     *  - TIPO_COMPROBANDO = EMITIDOS  -> SolicitaDescargaEmitidos (SOAP_ACTION_EMITIDOS)
+     *  - TIPO_COMPROBANDO = RECIBIDOS -> SolicitaDescargaRecibidos (SOAP_ACTION_RECIBIDOS)
+     *  - TIPO_COMPROBANDO = FOLIO     -> SolicitaDescargaFolio (SOAP_ACTION_DESCARGA_FOLIO)  (UUID se toma de MENSAJE_SAT o PAQUETE_SAT)
+     */
+    private SatSolicitudResult ejecutarSolicitudSATAccion1(EmpresasForm empresa, HistoricoProcesoSATForm h) {
+
+        String tipo = Utils.noNulo(h.getTipoComprobando()).trim().toUpperCase();
+
+        String fiStr = Utils.noNulo(h.getFechaInicio());
+        String ffStr = Utils.noNulo(h.getFechaFin());
+
+        if (tipo.contains("REC")) {
+            return ejecutarSolicitudSATAccion1RecibidosMetadata(empresa, fiStr, ffStr);
+        }
+
+        if (tipo.contains("FOL")) {
+            String uuid = extraerUuidFolio(h);
+            if (uuid.isEmpty()) {
+                SatSolicitudResult r = new SatSolicitudResult();
+                r.tipo = "FOLIO";
+                r.mensaje = "FOLIO sin UUID. Guarda el UUID en MENSAJE_SAT (o PAQUETE_SAT) del HISTORICO_PROCESO_SAT.";
+                return r;
+            }
+            return ejecutarSolicitudSATAccion1Folio(empresa, uuid);
+        }
+
+        // default
+        if (tipo.isEmpty()) tipo = "EMITIDOS";
+        return ejecutarSolicitudSATAccion1EmitidosMetadata(empresa, fiStr, ffStr);
+    }
+
+    private SatSolicitudResult ejecutarSolicitudSATAccion1EmitidosMetadata(
             EmpresasForm empresa, String fechaInicioStr, String fechaFinStr) {
+
+        SatSolicitudResult out = new SatSolicitudResult();
+        out.tipo = "EMITIDOS";
 
         try {
             LocalDateTime fi = parseLocalDateTimeFlex(fechaInicioStr);
             LocalDateTime ff = parseLocalDateTimeFlex(fechaFinStr);
 
             if (fi == null || ff == null) {
-                logger.info("ACCION=1 -> fechas inválidas FI=" + fechaInicioStr + " FF=" + fechaFinStr);
-                return null;
+                out.mensaje = "ACCION=1 EMITIDOS -> fechas inválidas FI=" + fechaInicioStr + " FF=" + fechaFinStr;
+                return out;
             }
 
             if (fi.isAfter(ff)) {
                 LocalDateTime tmp = fi;
                 fi = ff;
                 ff = tmp;
-                logger.info("ACCION=1 -> SWAP fechas (FI>FF). Nuevo FI=" + fi + " FF=" + ff);
+                logger.info("ACCION=1 EMITIDOS -> SWAP fechas (FI>FF). Nuevo FI=" + fi + " FF=" + ff);
             }
 
             SatContext ctx = buildSatContext(empresa);
-            if (ctx == null || ctx.credenciales == null) return null;
+            if (ctx == null || ctx.credenciales == null) {
+                out.mensaje = "ACCION=1 EMITIDOS -> sin credenciales/token";
+                return out;
+            }
 
             SolicitaDescargaEmitidos solicitud = new SolicitaDescargaEmitidos();
             solicitud.setRfcEmisor(Utils.noNulo(empresa.getRfc()));
@@ -910,7 +972,13 @@ public class monitorDescargaMasivaSat {
             );
 
             String response = cliente.send(envelope, ctx.credenciales.getTokenString());
-            return SolicitaDescargaEmitidosParser.parse(response);
+            SolicitaDescargaEmitidosResponse resp = SolicitaDescargaEmitidosParser.parse(response);
+
+            out.codEstatus = Utils.noNulo(resp == null ? "" : resp.getCodEstatus());
+            out.mensaje = Utils.noNulo(resp == null ? "" : resp.getMensaje());
+            out.idSolicitud = Utils.noNulo(resp == null ? "" : resp.getIdSolicitud());
+
+            return out;
 
         } catch (Exception e) {
             logger.error("ejecutarSolicitudSATAccion1EmitidosMetadata() ERROR", e);
@@ -918,8 +986,143 @@ public class monitorDescargaMasivaSat {
         }
     }
 
+    private SatSolicitudResult ejecutarSolicitudSATAccion1RecibidosMetadata(
+            EmpresasForm empresa, String fechaInicioStr, String fechaFinStr) {
+
+        SatSolicitudResult out = new SatSolicitudResult();
+        out.tipo = "RECIBIDOS";
+
+        try {
+            LocalDateTime fi = parseLocalDateTimeFlex(fechaInicioStr);
+            LocalDateTime ff = parseLocalDateTimeFlex(fechaFinStr);
+
+            if (fi == null || ff == null) {
+                out.mensaje = "ACCION=1 RECIBIDOS -> fechas inválidas FI=" + fechaInicioStr + " FF=" + fechaFinStr;
+                return out;
+            }
+
+            if (fi.isAfter(ff)) {
+                LocalDateTime tmp = fi;
+                fi = ff;
+                ff = tmp;
+                logger.info("ACCION=1 RECIBIDOS -> SWAP fechas (FI>FF). Nuevo FI=" + fi + " FF=" + ff);
+            }
+
+            SatContext ctx = buildSatContext(empresa);
+            if (ctx == null || ctx.credenciales == null) {
+                out.mensaje = "ACCION=1 RECIBIDOS -> sin credenciales/token";
+                return out;
+            }
+
+            String rfcSolicitante = Utils.noNulo(empresa.getRfc());
+
+            SolicitaDescargaRecibidos solicitud = new SolicitaDescargaRecibidos(
+                    fi,
+                    ff,
+                    rfcSolicitante,
+                    TipoSolicitud.METADATA,
+                    EstadoComprobante.TODOS
+            );
+            solicitud.setTipoComprobante(TipoComprobante.TODOS);
+
+            Document doc = Enveloped.GeneraXMLSolicitudDescargaRecibidos(solicitud);
+            String xmlFirmado = Enveloped.FirmarXml(doc, ctx.credenciales);
+            String envelope = Enveloped.CrearSoapSolicitud(xmlFirmado);
+
+            SoapClient cliente = new SoapClient(
+                    SatServicioUrl.SOLICITUD_URL.toString(),
+                    SatServicioUrl.SOLICITUD_SOAP_ACTION_RECIBIDOS.toString()
+            );
+
+            String response = cliente.send(envelope, ctx.credenciales.getTokenString());
+            SolicitaDescargaRecibidosResponse resp = SolicitaDescargaRecibidosParser.parse(response);
+
+            out.codEstatus = Utils.noNulo(resp == null ? "" : resp.getCodEstatus());
+            out.mensaje = Utils.noNulo(resp == null ? "" : resp.getMensaje());
+            out.idSolicitud = Utils.noNulo(resp == null ? "" : resp.getIdSolicitud());
+
+            return out;
+
+        } catch (Exception e) {
+            logger.error("ejecutarSolicitudSATAccion1RecibidosMetadata() ERROR", e);
+            return null;
+        }
+    }
+
+    private SatSolicitudResult ejecutarSolicitudSATAccion1Folio(EmpresasForm empresa, String uuid) {
+
+        SatSolicitudResult out = new SatSolicitudResult();
+        out.tipo = "FOLIO";
+
+        try {
+            uuid = Utils.noNulo(uuid).trim();
+            if (uuid.isEmpty()) {
+                out.mensaje = "ACCION=1 FOLIO -> UUID vacío";
+                return out;
+            }
+
+            SatContext ctx = buildSatContext(empresa);
+            if (ctx == null || ctx.credenciales == null) {
+                out.mensaje = "ACCION=1 FOLIO -> sin credenciales/token";
+                return out;
+            }
+
+            String rfcSolicitante = Utils.noNulo(empresa.getRfc()).trim();
+
+            SolicitaDescargaFolio solicitud = new SolicitaDescargaFolio(rfcSolicitante, uuid);
+
+            Document doc = Enveloped.GeneraXMLSolicitudDescargaFolio(solicitud);
+            String xmlFirmado = Enveloped.FirmarXml(doc, ctx.credenciales);
+            String envelope = Enveloped.CrearSoapSolicitud(xmlFirmado);
+
+            SoapClient cliente = new SoapClient(
+                    SatServicioUrl.SOLICITUD_URL.toString(),
+                    SatServicioUrl.SOLICITUD_SOAP_ACTION_DESCARGA_FOLIO.toString()
+            );
+
+            String response = cliente.send(envelope, ctx.credenciales.getTokenString());
+            SolicitaDescargaFolioResponse resp = SolicitaDescargaFolioParser.parse(response);
+
+            out.codEstatus = Utils.noNulo(resp == null ? "" : resp.getCodEstatus());
+            out.mensaje = Utils.noNulo(resp == null ? "" : resp.getMensaje());
+            out.idSolicitud = Utils.noNulo(resp == null ? "" : resp.getIdSolicitud());
+
+            return out;
+
+        } catch (Exception e) {
+            logger.error("ejecutarSolicitudSATAccion1Folio() ERROR", e);
+            return null;
+        }
+    }
+
+    /**
+     * Para solicitud por FOLIO (UUID):
+     * - 1er intento: MENSAJE_SAT
+     * - 2do intento: PAQUETE_SAT
+     * - 3er intento: ACCION_SAT
+     */
+    private String extraerUuidFolio(HistoricoProcesoSATForm h) {
+
+        String[] candidates = new String[]{
+                Utils.noNulo(h.getMensajeSat()),
+                Utils.noNulo(h.getPaqueteSat()),
+                Utils.noNulo(h.getAccionSat())
+        };
+
+        String regex = "([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12})";
+
+        for (String s : candidates) {
+            s = Utils.noNulo(s);
+            java.util.regex.Matcher mm = java.util.regex.Pattern.compile(regex).matcher(s);
+            if (mm.find()) {
+                return Utils.noNulo(mm.group(1)).toUpperCase();
+            }
+        }
+        return "";
+    }
+
     private void actualizarHistoricoAccion1(DescargaSATBean bean, String esquema, int claveHistorico,
-            SolicitaDescargaEmitidosResponse resp) {
+            SatSolicitudResult resp) {
 
         ConexionDB connPool = new ConexionDB();
         ResultadoConexion rc = null;
@@ -935,8 +1138,8 @@ public class monitorDescargaMasivaSat {
             }
 
             boolean ok = (resp != null
-                    && "5000".equals(Utils.noNulo(resp.getCodEstatus()).trim())
-                    && !Utils.noNulo(resp.getIdSolicitud()).trim().isEmpty());
+                    && "5000".equals(Utils.noNulo(resp.codEstatus).trim())
+                    && !Utils.noNulo(resp.idSolicitud).trim().isEmpty());
 
             if (ok) {
                 bean.actualizarHistoricoSolicitudSat(
@@ -944,16 +1147,18 @@ public class monitorDescargaMasivaSat {
                         esquema,
                         claveHistorico,
                         "1",
-                        resp.getIdSolicitud(),
+                        Utils.noNulo(resp.idSolicitud),
                         "SOL",
-                        resp.getMensaje()
+                        Utils.noNulo(resp.mensaje)
                 );
             } else {
                 String msg;
                 if (resp == null) {
                     msg = "SIN_RESPUESTA_SAT";
                 } else {
-                    msg = "COD=" + Utils.noNulo(resp.getCodEstatus()) + " MSG=" + Utils.noNulo(resp.getMensaje());
+                    msg = "TIPO=" + Utils.noNulo(resp.tipo)
+                            + " COD=" + Utils.noNulo(resp.codEstatus)
+                            + " MSG=" + Utils.noNulo(resp.mensaje);
                 }
                 bean.actualizarHistoricoErrorSat(con, esquema, claveHistorico, "ERR", msg);
             }
